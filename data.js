@@ -7,7 +7,7 @@ const allCards = [
     // ===== 学业牌 =====
     {id:"s1", name:"量子速读", cost:0, type:"study", damage:5, defense:0, gpa:2, effect:"draw1", desc:"造成5点伤害。抽1张牌。"},
     {id:"s2", name:"考试周", cost:3, type:"study", damage:24, defense:0, gpa:5, effect:"nextTurnEnergy-1", desc:"造成24点伤害。下回合精力-1。"},
-    {id:"s3", name:"记笔记", cost:1, type:"study", damage:0, defense:0, gpa:3, effect:"studyDamage+2", desc:"本回合学业牌伤害+2。"},
+    {id:"s3", name:"记笔记", cost:1, type:"study", damage:0, defense:0, gpa:3, effect:"studyDamage+2", desc:"获得2点专注（学业牌伤害+2，本场战斗）。"},
     {id:"s4", name:"图书馆通宵", cost:2, type:"study", damage:14, defense:0, gpa:8, effect:"selfDamage3", desc:"造成14点伤害。自身-3心态。"},
     {id:"s5", name:"提问", cost:1, type:"study", damage:7, defense:0, gpa:3, effect:"reduceEnemyDamage3", desc:"造成7点伤害。敌人本回合伤害-3。"},
     {id:"s6", name:"蹭课大佬", cost:1, type:"study", damage:8, defense:0, gpa:2, effect:"discoverOtherType", desc:"造成8点伤害。发现一张其他流派牌。"},
@@ -247,7 +247,7 @@ const randomEvents = {
         desc: "你在学校里碰到了一位神秘的人。他递给你一根干瘪的菜根，缓缓问道：「同学，觉得读书苦吗？」",
         choices: [
             {text:"苦，但能熬。", subtitle:"",
-                result:"他欣慰地点点头：「嚼得菜根，百事可做。去吧，孩子。」",
+                result:"他欣慰地点点头：「嚼得菜根，做得大事。去吧，孩子。」",
                 effect:"addCaigenRelic", effectDesc:"获得传奇遗物【嚼过的菜根】（半血以下化身战神）。"},
             {text:"太特么苦了，我想回家。", subtitle:"",
                 result:"他叹了口气，往你手里塞了一把零钱：「去买点好吃的吧，别难为自己。」",
@@ -263,7 +263,7 @@ const randomEventPool = ["lecture", "nobel", "allergy", "crabEvent", "mysteryMan
 const relics = {
     // 传奇
     nobel: {name:"诺奖得主的签名", type:"legendary", effect:"每打出2张牌，下张学业牌消耗-1。", flavor:"大脑被开光了。"},
-    caigen: {name:"嚼过的菜根", type:"legendary", effect:"心态<50%时，精力+1，学业牌伤害+3。", flavor:"嚼得菜根，百事可做。"},
+    caigen: {name:"嚼过的菜根", type:"legendary", effect:"心态<50%时，精力+1，学业牌伤害+3。", flavor:"嚼得菜根，做得大事。"},
     philosophy: {name:"哲学碎片", type:"legendary", effect:"一回合打出3张牌，随机1张牌消耗变0。", flavor:"降维打击。"},
     // 普通
     thermos: {name:"保温杯", type:"common", effect:"战斗开始获得8点效率。", flavor:"里面装的不是水，是我的生命。"},

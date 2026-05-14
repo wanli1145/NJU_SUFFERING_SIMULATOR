@@ -11,6 +11,7 @@
         <!-- 开始界面 -->
         <div id="start-screen" class="screen active">
             <div class="start-bg-decoration"></div>
+            <div class="demo-watermark">DEMO</div>
             <div class="start-content">
                 <div class="title-stamp">
                     <h1 class="game-title">南大受苦模拟器</h1>
@@ -25,7 +26,7 @@
                     </button>
                     <button id="btn-load" class="menu-btn">
                         <span class="menu-icon">📋</span>
-                        <span class="menu-text">学籍</span>
+                        <span class="menu-text">返校</span>
                         <span class="menu-sub">读取存档</span>
                     </button>
                     <button id="btn-credits" class="menu-btn">
@@ -39,6 +40,10 @@
                         <span class="menu-sub">关闭游戏</span>
                     </button>
                 </div>
+            </div>
+            <div class="feedback-info">
+                <span>📧 反馈邮箱：</span>
+                <a href="mailto:yanyan04092026@163.com">yanyan04092026@163.com</a>
             </div>
         </div>
 
@@ -65,7 +70,7 @@
                         <p>每一个在图书馆通宵的勇士</p>
                         <p>九食堂的师傅们</p>
                         <p>鼓楼的妖风</p>
-                        <p>以及所有相信「嚼得菜根，百事可做」的你</p>
+                        <p>以及所有相信「嚼得菜根，做得大事」的你</p>
                     </div>
                     <div class="credit-section flavor">
                         <p>本游戏所有情节、人物、事件均为虚构。</p>
@@ -190,7 +195,10 @@
                         <span class="pile-number" id="discard-pile-count">0</span>
                     </div>
                 </div>
-                <button id="btn-end-turn" class="btn-end-turn">结束回合</button>
+                <div class="battle-actions">
+                    <button id="btn-use-item" class="btn-use-item" title="使用道具">🧪 道具</button>
+                    <button id="btn-end-turn" class="btn-end-turn">结束回合</button>
+                </div>
             </div>
         </div>
 
@@ -232,6 +240,24 @@
                     <p id="ending-money"></p>
                 </div>
                 <button id="btn-restart" class="btn-primary">再来一局</button>
+            </div>
+        </div>
+
+        <!-- 道具使用弹窗 -->
+        <div id="item-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>使用道具</h2>
+                <div id="item-modal-list" class="item-list"></div>
+                <button id="btn-item-modal-close" class="btn-secondary">取消</button>
+            </div>
+        </div>
+
+        <!-- 牌堆查看弹窗 -->
+        <div id="pile-modal" class="modal hidden">
+            <div class="modal-content pile-modal-content">
+                <h2 id="pile-modal-title">抽牌堆</h2>
+                <div id="pile-modal-list" class="deck-view-area"></div>
+                <button id="btn-pile-modal-close" class="btn-secondary">关闭</button>
             </div>
         </div>
 

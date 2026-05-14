@@ -503,7 +503,7 @@ function applyEventEffect(effectStr) {
         else if (eff === 'removeAnyCard') game.pendingAction = { type: 'removeCard', filter: 'any' };
         else if (eff === 'addSocialCard') addRandomCardOfType('social');
         else if (eff === 'addSick') game.statuses.sick = true;
-        else if (eff === 'addSleepy') game.statuses.sick = true;
+        else if (eff === 'addSleepy') game.deck.push('c3');
         else if (eff === 'addRhinitis') game.deck.push('c1');
         else if (eff === 'addCrabCurse') game.deck.push('c2');
         else if (eff === 'addNobelRelic') game.relicsOwned.push('nobel');
@@ -671,6 +671,8 @@ function startBattle(enemyKey) {
     game.statuses.maxCardsThisTurn = 99;
     game.statuses.loseDefenseNext = 0;
     game.statuses.surviveLethal = false;
+    game.statuses.strength = 0;
+    game.statuses.nextStudyDoubled = false;
 
     showScreen('battle-screen');
     // 遗物：保温杯
@@ -713,7 +715,14 @@ function startPlayerTurn() {
     if (game.deck.includes('c2') && game.battle.turn % 2 === 0) {
         energy--;
     }
+    const oldEnergy = game.battle.energy;
     game.battle.energy = Math.max(0, energy);
+    // 显示精力恢复数字
+    const energyDelta = game.battle.energy - oldEnergy;
+    if (energyDelta > 0) {
+        const panel = document.querySelector('.player-battle-panel');
+        if (panel) setTimeout(() => showFloatNumber(panel, `+${energyDelta}⚡`, 'heal'), 100);
+    }
 
     // 效率清零
     game.player.defense = 0;
@@ -793,6 +802,19 @@ function renderBattle() {
         div.className = `enemy-card ${enemy.isElite ? 'elite' : ''} ${enemy.isBoss ? 'boss' : ''}`;
         const hpPercent = Math.max(0, (enemy.hp / enemy.maxHp) * 100);
         const intent = getEnemyIntent(enemy);
+        // 计算意图实际对玩家造成的伤害
+        const action = getCurrentEnemyAction(enemy);
+        let actualDmgText = '';
+        if (action && action.damage > 0) {
+            let dmg = action.damage;
+            if (enemy.weak > 0 && !(action.effect && action.effect.includes('ignoreWeak'))) {
+                dmg = Math.floor(dmg * 0.5);
+            }
+            // 减去玩家防御
+            const playerDef = game.player.defense;
+            const realDmg = Math.max(0, dmg - playerDef);
+            actualDmgText = `<div class="actual-damage">实际扣血: <b>${realDmg}</b></div>`;
+        }
         div.innerHTML = `
             <div class="enemy-name">${enemy.name}</div>
             <div class="enemy-hp">${enemy.hp}/${enemy.maxHp}
@@ -801,6 +823,7 @@ function renderBattle() {
             ${enemy.defense > 0 ? `<div class="enemy-defense">🛡️ ${enemy.defense}</div>` : ''}
             ${enemy.weak > 0 ? `<div class="enemy-defense" style="color:#ff6b6b">虚弱 ${enemy.weak}回合</div>` : ''}
             <div class="enemy-intent">意图：${intent}</div>
+            ${actualDmgText}
         `;
         div.dataset.idx = idx;
         enemiesArea.appendChild(div);
@@ -813,10 +836,8 @@ function renderBattle() {
         const card = getCardData(cardId);
         if (!card) return;
         const el = createCardElement(card, false);
-        // 检查是否可以打出
         const canPlay = canPlayCard(card);
         if (!canPlay) el.classList.add('disabled');
-        // 新抽的牌加动画（错开时间）
         if (game.battle._newlyDrawn && game.battle._newlyDrawn.includes(idx)) {
             const drawIdx = game.battle._newlyDrawn.indexOf(idx);
             const delay = drawIdx * 0.12;
@@ -828,10 +849,12 @@ function renderBattle() {
                 el.classList.add('card-drawing');
             }
         }
-        el.onclick = () => { if (canPlay) playCard(idx); };
+        // 拖动出牌：mousedown 启动，移动跟随，松手时检查是否在出牌区
+        if (canPlay) {
+            attachDragHandler(el, idx);
+        }
         handArea.appendChild(el);
     });
-    // 清除新抽标记
     game.battle._newlyDrawn = null;
     game.battle._drawIsMidTurn = false;
 
@@ -846,7 +869,16 @@ function renderBattle() {
     if (game.statuses.surviveLethal) statusText.push('💪致死保护');
     if (game.statuses.studyDmgBonus > 0) statusText.push(`📚学业+${game.statuses.studyDmgBonus}`);
     if (game.statuses.allDmgBonus > 0) statusText.push(`⚔️全伤害+${game.statuses.allDmgBonus}`);
+    if (game.statuses.strength > 0) statusText.push(`💪专注+${game.statuses.strength}`);
+    if (game.statuses.socialFreeCount > 0) statusText.push(`🤝社交免费×${game.statuses.socialFreeCount}`);
     statusDiv.textContent = statusText.join(' | ');
+
+    // 道具按钮可用性
+    const useItemBtn = document.getElementById('btn-use-item');
+    if (useItemBtn) {
+        useItemBtn.style.display = game.itemsOwned.length > 0 ? '' : 'none';
+        useItemBtn.textContent = `🧪 道具 (${game.itemsOwned.length})`;
+    }
 }
 
 function getEnemyIntent(enemy) {
@@ -923,12 +955,106 @@ function createCardElement(card, isChoice) {
     return el;
 }
 
+// ===== 拖动出牌系统 =====
+function attachDragHandler(cardEl, handIdx) {
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let originalRect = null;
+    let dragThreshold = 30; // 拖动超过30像素才算开始拖动
+    let hasMoved = false;
+
+    const onPointerDown = (e) => {
+        // 忽略右键
+        if (e.button !== 0) return;
+        isDragging = true;
+        hasMoved = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        originalRect = cardEl.getBoundingClientRect();
+        cardEl.classList.add('is-dragging');
+        cardEl.style.transition = 'none';
+        cardEl.style.zIndex = '100';
+        cardEl.setPointerCapture && cardEl.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+        e.preventDefault();
+    };
+
+    const onPointerMove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const dist = Math.hypot(dx, dy);
+        if (dist > dragThreshold) hasMoved = true;
+        if (hasMoved) {
+            cardEl.style.transform = `translate(${dx}px, ${dy}px) rotate(0deg) scale(1.1)`;
+            cardEl.style.boxShadow = '0 20px 50px rgba(102,126,234,0.5)';
+            const enemyArea = document.getElementById('enemies-area');
+            const inDropZone = e.clientY < (originalRect.top - 50);
+            cardEl.style.opacity = inDropZone ? '1' : '0.85';
+            if (inDropZone) {
+                enemyArea.classList.add('drop-zone-active');
+            } else {
+                enemyArea.classList.remove('drop-zone-active');
+            }
+        }
+    };
+
+    const onPointerUp = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        const enemyArea = document.getElementById('enemies-area');
+        enemyArea.classList.remove('drop-zone-active');
+
+        const draggedFarEnough = hasMoved && (e.clientY < originalRect.top - 50);
+
+        if (draggedFarEnough) {
+            cardEl.classList.remove('is-dragging');
+            cardEl.style.transition = '';
+            cardEl.style.transform = '';
+            cardEl.style.boxShadow = '';
+            cardEl.style.opacity = '';
+            cardEl.style.zIndex = '';
+            playCard(handIdx);
+        } else {
+            cardEl.style.transition = 'all 0.25s ease-out';
+            cardEl.style.transform = '';
+            cardEl.style.boxShadow = '';
+            cardEl.style.opacity = '';
+            setTimeout(() => {
+                cardEl.classList.remove('is-dragging');
+                cardEl.style.zIndex = '';
+                cardEl.style.transition = '';
+            }, 250);
+        }
+    };
+
+    cardEl.addEventListener('pointerdown', onPointerDown);
+}
+
 
 // ===== 打牌逻辑 =====
 function playCard(handIdx) {
     const cardId = game.battle.hand[handIdx];
     const card = getCardData(cardId);
     if (!card || !canPlayCard(card)) return;
+
+    // 立即扣费视觉反馈：先计算费用并扣除，让玩家立刻看到精力变化
+    let cost = card.cost;
+    if (card.type === 'social' && game.statuses.socialFreeCount > 0) cost = 0;
+    if (game.battle.cardsPlayedThisTurn === 0 && game.battle.hand.includes('c1')) cost++;
+    // 临时显示精力数（不真扣，executePlayCard 才真扣）
+    const energyEl = document.getElementById('battle-energy');
+    if (energyEl && cost > 0) {
+        const currentMaxText = `/${game.battle.maxEnergy}`;
+        const newEnergy = Math.max(0, game.battle.energy - Math.max(0, cost));
+        energyEl.textContent = `${newEnergy}${currentMaxText}`;
+        // 飞起精力消耗数字
+        const panel = document.querySelector('.player-battle-panel');
+        if (panel && cost > 0) showFloatNumber(panel, `-${cost}⚡`, 'shield');
+    }
 
     // 播放出牌动画（向上飞）
     const handArea = document.getElementById('hand-area');
@@ -956,6 +1082,11 @@ function executePlayCard(handIdx, cardId, card) {
     if (cost > game.battle.energy && card.id !== 'c4') return;
     game.battle.energy -= Math.max(0, cost);
 
+    // 隐藏属性：noGpaThisBattle (代签)
+    if (card.hidden === 'noGpaThisBattle') {
+        game.statuses.noGpaThisBattle = true;
+    }
+
     // 扣生活费
     if (card.moneyCost) {
         game.player.money -= card.moneyCost;
@@ -972,6 +1103,11 @@ function executePlayCard(handIdx, cardId, card) {
     if (damage > 0 && (card.type === 'study' || card.type === 'initial')) {
         damage += game.statuses.studyDmgBonus;
         damage += game.statuses.strength;
+        // 草稿纸：下张学业牌伤害翻倍
+        if (game.statuses.nextStudyDoubled) {
+            damage *= 2;
+            game.statuses.nextStudyDoubled = false;
+        }
         // 遗物：四色荧光笔
         if (game.relicsOwned.includes('highlighter') && !game.statuses.highlighterUsed) {
             damage = Math.floor(damage * 1.5);
@@ -1081,7 +1217,7 @@ function applyCardEffect(card) {
                 game.statuses.nextTurnEnergyMod--;
                 break;
             case 'studyDamage+2':
-                game.statuses.studyDmgBonus += 2;
+                game.statuses.strength += 2;
                 break;
             case 'selfDamage3':
                 game.player.hp -= 3;
@@ -1618,8 +1754,71 @@ document.getElementById('btn-view-deck').onclick = showDeckView;
 document.getElementById('btn-view-relics').onclick = showRelicView;
 document.getElementById('btn-close-deck').onclick = () => showScreen('map-screen');
 document.getElementById('btn-close-relics').onclick = () => showScreen('map-screen');
+document.getElementById('btn-use-item').onclick = showItemModal;
+document.getElementById('btn-item-modal-close').onclick = () => document.getElementById('item-modal').classList.add('hidden');
+document.getElementById('btn-pile-modal-close').onclick = () => document.getElementById('pile-modal').classList.add('hidden');
+document.getElementById('draw-pile-visual').onclick = () => showPileModal('draw');
+document.getElementById('discard-pile-visual').onclick = () => showPileModal('discard');
 
-// ===== 存档功能 =====
+// ===== 战斗中道具与牌堆查看 =====
+function showItemModal() {
+    if (!game.battle) return;
+    if (game.itemsOwned.length === 0) {
+        alert('没有道具可使用。');
+        return;
+    }
+    const modal = document.getElementById('item-modal');
+    const list = document.getElementById('item-modal-list');
+    list.innerHTML = '';
+    game.itemsOwned.forEach((key, idx) => {
+        const item = items[key];
+        if (!item) return;
+        const div = document.createElement('div');
+        div.className = 'item-card';
+        div.innerHTML = `<div class="item-name">${item.name}</div><div class="item-effect">${item.effect}</div><div class="item-flavor">${item.flavor || ''}</div>`;
+        div.onclick = () => useItem(idx);
+        list.appendChild(div);
+    });
+    modal.classList.remove('hidden');
+}
+
+function useItem(idx) {
+    const key = game.itemsOwned[idx];
+    if (!key) return;
+    if (key === 'coffee') {
+        game.battle.energy++;
+    } else if (key === 'paper') {
+        game.statuses.nextStudyDoubled = true;
+    } else if (key === 'cola') {
+        game.player.hp = Math.min(game.player.maxHp, game.player.hp + 15);
+    }
+    game.itemsOwned.splice(idx, 1);
+    document.getElementById('item-modal').classList.add('hidden');
+    renderBattle();
+}
+
+function showPileModal(which) {
+    if (!game.battle) return;
+    const pile = which === 'draw' ? game.battle.drawPile : game.battle.discardPile;
+    const title = which === 'draw' ? `抽牌堆 (${pile.length}张)` : `弃牌堆 (${pile.length}张)`;
+    document.getElementById('pile-modal-title').textContent = title;
+    const list = document.getElementById('pile-modal-list');
+    list.innerHTML = '';
+    if (pile.length === 0) {
+        list.innerHTML = '<p style="color:#888">空</p>';
+    } else {
+        // 抽牌堆乱序展示，弃牌堆按顺序
+        const cards = which === 'draw' ? [...pile].sort(() => Math.random() - 0.5) : pile;
+        cards.forEach(cardId => {
+            const card = getCardData(cardId);
+            if (!card) return;
+            const el = createCardElement(card, true);
+            el.style.cursor = 'default';
+            list.appendChild(el);
+        });
+    }
+    document.getElementById('pile-modal').classList.remove('hidden');
+}
 function saveGame() {
     try {
         const saveData = {
@@ -1645,7 +1844,7 @@ function saveGame() {
 function loadGame() {
     const raw = localStorage.getItem('nju_suffering_save');
     if (!raw) {
-        alert('没有找到学籍档案。\n请先「入学」开始一段新的旅程。');
+        alert('没有找到返校档案。\n请先「入学」开始一段新的旅程。');
         return;
     }
     try {
@@ -1665,7 +1864,7 @@ function loadGame() {
         showScreen('map-screen');
         showCurrentWeek();
     } catch (e) {
-        alert('学籍档案损坏，无法读取。');
+        alert('返校档案损坏，无法读取。');
         console.error(e);
     }
 }
