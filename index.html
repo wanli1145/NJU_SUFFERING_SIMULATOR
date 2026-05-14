@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南大受苦模拟器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- 开始界面 -->
+        <div id="start-screen" class="screen active">
+            <div class="start-bg-decoration"></div>
+            <div class="start-content">
+                <div class="title-stamp">
+                    <h1 class="game-title">南大受苦模拟器</h1>
+                    <div class="title-seal">南</div>
+                </div>
+                <p class="game-subtitle">— 一款类杀戮尖塔的卡牌肉鸽游戏 —</p>
+                <div class="menu-buttons">
+                    <button id="btn-enroll" class="menu-btn primary">
+                        <span class="menu-icon">🎓</span>
+                        <span class="menu-text">入学</span>
+                        <span class="menu-sub">开始新的受苦旅程</span>
+                    </button>
+                    <button id="btn-load" class="menu-btn">
+                        <span class="menu-icon">📋</span>
+                        <span class="menu-text">学籍</span>
+                        <span class="menu-sub">读取存档</span>
+                    </button>
+                    <button id="btn-credits" class="menu-btn">
+                        <span class="menu-icon">📜</span>
+                        <span class="menu-text">制作人名单</span>
+                        <span class="menu-sub">致谢</span>
+                    </button>
+                    <button id="btn-quit" class="menu-btn danger">
+                        <span class="menu-icon">🚪</span>
+                        <span class="menu-text">退学</span>
+                        <span class="menu-sub">关闭游戏</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 制作人名单 -->
+        <div id="credits-screen" class="screen">
+            <div class="credits-content">
+                <h1 class="credits-title">制作人名单</h1>
+                <div class="credits-list">
+                    <div class="credit-section">
+                        <h3>策划 / 文案</h3>
+                        <p>南京大学受苦人民</p>
+                    </div>
+                    <div class="credit-section">
+                        <h3>程序</h3>
+                        <p>Kiro AI 协助开发</p>
+                    </div>
+                    <div class="credit-section">
+                        <h3>美术 / UI</h3>
+                        <p>Emoji 大法</p>
+                    </div>
+                    <div class="credit-section">
+                        <h3>特别鸣谢</h3>
+                        <p>每一个挣扎在 DDL 边缘的同学</p>
+                        <p>每一个在图书馆通宵的勇士</p>
+                        <p>九食堂的师傅们</p>
+                        <p>鼓楼的妖风</p>
+                        <p>以及所有相信「嚼得菜根，百事可做」的你</p>
+                    </div>
+                    <div class="credit-section flavor">
+                        <p>本游戏所有情节、人物、事件均为虚构。</p>
+                        <p>如有雷同，那就是现实。</p>
+                    </div>
+                </div>
+                <button id="btn-credits-back" class="btn-secondary">返回</button>
+            </div>
+        </div>
+
+        <!-- 地图界面 -->
+        <div id="map-screen" class="screen">
+            <div class="top-bar">
+                <div class="week-display">
+                    <div class="calendar-icon" id="calendar-icon">
+                        <div class="cal-header">期末倒计时</div>
+                        <div class="cal-number" id="cal-number">12</div>
+                    </div>
+                    <span class="week-text" id="week-text">距离期末还有：12周</span>
+                </div>
+                <div class="gpa-chart-mini">
+                    <div class="gpa-chart-label">GPA 走势</div>
+                    <canvas id="gpa-chart-mini" width="180" height="60"></canvas>
+                </div>
+                <div class="player-stats">
+                    <div class="campus-card">
+                        <div class="card-avatar">🎓</div>
+                        <div class="card-stats">
+                            <div class="stat-item"><span class="stat-icon">❤️</span><span class="stat-value" id="stat-hp">100/100</span></div>
+                            <div class="stat-item"><span class="stat-icon">💰</span><span class="stat-value" id="stat-money">200</span></div>
+                            <div class="stat-item"><span class="stat-icon">⚡</span><span class="stat-value" id="stat-energy">3</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="map-content">
+                <h2 id="map-week-name" class="map-title"></h2>
+                <div id="map-choices" class="map-choices"></div>
+            </div>
+            <div class="map-bottom">
+                <div id="owned-relics-bar" class="owned-relics-bar"></div>
+                <div class="map-bottom-buttons">
+                    <button id="btn-view-deck" class="btn-secondary">📚 查看牌组</button>
+                    <button id="btn-view-relics" class="btn-secondary">🏆 查看遗物</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 事件界面 -->
+        <div id="event-screen" class="screen">
+            <div class="top-bar">
+                <div class="week-display">
+                    <div class="calendar-icon">
+                        <div class="cal-header">期末倒计时</div>
+                        <div class="cal-number" id="event-cal-number">12</div>
+                    </div>
+                    <span class="week-text" id="event-week-text">距离期末还有：12周</span>
+                </div>
+                <div class="player-stats">
+                    <div class="campus-card">
+                        <div class="card-avatar">🎓</div>
+                        <div class="card-stats">
+                            <div class="stat-item"><span class="stat-icon">❤️</span><span class="stat-value" id="event-stat-hp">100/100</span></div>
+                            <div class="stat-item"><span class="stat-icon">💰</span><span class="stat-value" id="event-stat-money">200</span></div>
+                            <div class="stat-item"><span class="stat-icon">⚡</span><span class="stat-value" id="event-stat-energy">3</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="event-content">
+                <h2 id="event-title" class="event-title"></h2>
+                <p id="event-desc" class="event-desc"></p>
+                <div id="event-choices" class="event-choices"></div>
+                <div id="event-result" class="event-result hidden">
+                    <p id="event-result-text"></p>
+                    <p id="event-result-effect" class="effect-text"></p>
+                    <button id="btn-event-continue" class="btn-primary">继续</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 战斗界面 -->
+        <div id="battle-screen" class="screen">
+            <div class="battle-top-bar">
+                <div class="player-battle-panel">
+                    <div class="player-avatar-battle">🎓</div>
+                    <div class="player-battle-info">
+                        <div class="player-hp-section">
+                            <span class="hp-label">❤️ <span id="battle-hp">100/100</span></span>
+                            <div class="player-hp-bar">
+                                <div class="player-hp-fill" id="player-hp-fill" style="width:100%"></div>
+                            </div>
+                        </div>
+                        <div class="player-battle-row">
+                            <span class="battle-stat">🛡️ <span id="battle-defense">0</span></span>
+                            <span class="battle-stat">⚡ <span id="battle-energy">3/3</span></span>
+                            <span class="battle-stat">💰 <span id="battle-money">200</span></span>
+                            <span class="battle-stat" title="本周累积学分，每10分→GPA+0.1">📖 <span id="battle-credits">0</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="battle-field">
+                <div id="enemies-area" class="enemies-area"></div>
+                <div id="battle-status" class="battle-status"></div>
+            </div>
+            <div class="battle-bottom">
+                <div class="hand-row">
+                    <div class="pile-visual draw-pile" id="draw-pile-visual">
+                        <div class="pile-stack"></div>
+                        <div class="pile-stack"></div>
+                        <div class="pile-stack"></div>
+                        <span class="pile-label">抽牌堆</span>
+                        <span class="pile-number" id="draw-pile-count">0</span>
+                    </div>
+                    <div id="hand-area" class="hand-area"></div>
+                    <div class="pile-visual discard-pile" id="discard-pile-visual">
+                        <div class="pile-stack"></div>
+                        <div class="pile-stack"></div>
+                        <div class="pile-stack"></div>
+                        <span class="pile-label">弃牌堆</span>
+                        <span class="pile-number" id="discard-pile-count">0</span>
+                    </div>
+                </div>
+                <button id="btn-end-turn" class="btn-end-turn">结束回合</button>
+            </div>
+        </div>
+
+        <!-- 卡牌选择界面 -->
+        <div id="card-choice-screen" class="screen">
+            <div class="card-choice-content">
+                <h2 id="card-choice-title">选择一张卡牌</h2>
+                <div id="card-choice-area" class="card-choice-area"></div>
+                <button id="btn-skip-card" class="btn-secondary">跳过</button>
+            </div>
+        </div>
+
+        <!-- 牌组查看界面 -->
+        <div id="deck-view-screen" class="screen">
+            <div class="deck-view-content">
+                <h2>当前牌组</h2>
+                <div id="deck-view-area" class="deck-view-area"></div>
+                <button id="btn-close-deck" class="btn-secondary">关闭</button>
+            </div>
+        </div>
+
+        <!-- 遗物查看界面 -->
+        <div id="relic-view-screen" class="screen">
+            <div class="relic-view-content">
+                <h2>当前遗物</h2>
+                <div id="relic-view-area" class="relic-view-area"></div>
+                <button id="btn-close-relics" class="btn-secondary">关闭</button>
+            </div>
+        </div>
+
+        <!-- 结局界面 -->
+        <div id="ending-screen" class="screen">
+            <div class="ending-content">
+                <h1 id="ending-rank" class="ending-rank"></h1>
+                <h2 id="ending-title" class="ending-title"></h2>
+                <p id="ending-desc" class="ending-desc"></p>
+                <div class="ending-stats">
+                    <p id="ending-gpa"></p>
+                    <p id="ending-money"></p>
+                </div>
+                <button id="btn-restart" class="btn-primary">再来一局</button>
+            </div>
+        </div>
+
+        <!-- GPA预警弹窗 -->
+        <div id="gpa-warning-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="gpa-warning-title"></h2>
+                <p id="gpa-warning-desc"></p>
+                <canvas id="gpa-chart" width="300" height="100"></canvas>
+                <button id="btn-gpa-warning-ok" class="btn-primary">确认</button>
+            </div>
+        </div>
+
+        <!-- 移除卡牌界面 -->
+        <div id="remove-card-screen" class="screen">
+            <div class="deck-view-content">
+                <h2 id="remove-card-title">选择要移除的卡牌</h2>
+                <div id="remove-card-area" class="deck-view-area"></div>
+                <button id="btn-cancel-remove" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
