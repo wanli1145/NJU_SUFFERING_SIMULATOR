@@ -5,17 +5,17 @@ const allCards = [
     {id:"init_study", name:"学习", cost:1, type:"initial", damage:6, defense:0, gpa:1, desc:"造成6点伤害。"},
     {id:"init_phone", name:"小手机真好玩", cost:1, type:"initial", damage:0, defense:5, gpa:0, desc:"获得5点效率。"},
     // ===== 学业牌 =====
-    {id:"s1", name:"量子速读", cost:0, type:"study", damage:5, defense:0, gpa:2, effect:"draw1", desc:"造成5点伤害。抽1张牌。"},
+    {id:"s1", name:"量子速读", cost:1, type:"study", damage:5, defense:0, gpa:3, effect:"draw1", desc:"造成5点伤害。抽1张牌。"},
     {id:"s2", name:"考试周", cost:3, type:"study", damage:24, defense:0, gpa:5, effect:"nextTurnEnergy-1", desc:"造成24点伤害。下回合精力-1。"},
     {id:"s3", name:"记笔记", cost:1, type:"study", damage:0, defense:0, gpa:3, effect:"studyDamage+2", desc:"获得2点专注（学业牌伤害+2，本场战斗）。"},
-    {id:"s4", name:"图书馆通宵", cost:2, type:"study", damage:14, defense:0, gpa:8, effect:"selfDamage3", desc:"造成14点伤害。自身-3心态。"},
+    {id:"s4", name:"图书馆通宵", cost:2, type:"study", damage:14, defense:0, gpa:5, effect:"selfDamage3", desc:"造成14点伤害。自身-3心态。"},
     {id:"s5", name:"提问", cost:1, type:"study", damage:7, defense:0, gpa:3, effect:"reduceEnemyDamage3", desc:"造成7点伤害。敌人本回合伤害-3。"},
     {id:"s6", name:"蹭课大佬", cost:1, type:"study", damage:8, defense:0, gpa:2, effect:"discoverOtherType", desc:"造成8点伤害。发现一张其他流派牌。"},
-    {id:"s7", name:"聚精会神", cost:0, type:"study", damage:0, defense:6, gpa:2, desc:"获得6点效率。"},
+    {id:"s7", name:"聚精会神", cost:1, type:"study", damage:0, defense:8, gpa:2, desc:"获得8点效率。"},
     {id:"s8", name:"学术引用", cost:1, type:"study", damage:0, defense:0, gpa:2, effect:"copyLastStudyHalf", desc:"复制上张学业牌效果(伤害减半)。"},
-    {id:"s9", name:"咖啡", cost:0, type:"study", damage:0, defense:0, gpa:0, effect:"gainEnergy1,selfDamage5", desc:"获得1精力。-5心态。"},
-    {id:"s10", name:"答辩", cost:2, type:"study", damage:18, defense:0, gpa:10, effect:"aoe,healOnKill5", desc:"18点全体伤害。击杀回5心态。"},
-    // ===== 娱乐牌（不再扣GPA，扣心态体现代价）=====
+    {id:"s9", name:"咖啡", cost:0, type:"study", damage:0, defense:0, gpa:0, effect:"gainEnergy1,selfDamage8", desc:"获得1精力。-8心态。"},
+    {id:"s10", name:"答辩", cost:2, type:"study", damage:22, defense:0, gpa:8, effect:"healOnKill5", desc:"造成22点伤害。若击败敌人，心态回5。"},
+    // ===== 娱乐牌 =====
     {id:"f1", name:"摸小蓝鲸", cost:0, type:"fun", damage:0, defense:4, gpa:0, effect:"noDamageThisTurn", desc:"获得4点效率。本回合无法造成伤害。"},
     {id:"f2", name:"犒劳自己", cost:0, type:"fun", damage:0, defense:0, gpa:0, moneyCost:25, effect:"heal12,allDamage+2", desc:"花25生活费。+12心态，本回合伤害+2。"},
     {id:"f3", name:"重新开始？", cost:1, type:"fun", damage:0, defense:0, gpa:0, effect:"discardAllRedrawEqual,heal2", desc:"弃所有手牌重抽等量。+2心态。"},
@@ -29,7 +29,7 @@ const allCards = [
     // ===== 社交牌 =====
     {id:"so1", name:"菜菜捞捞", cost:1, type:"social", damage:0, defense:0, gpa:0, effect:"surviveLethalWith1hp", desc:"下次致死伤害保留1心态。"},
     {id:"so2", name:"重新开始！", cost:0, type:"social", damage:0, defense:0, gpa:1, effect:"discardFun,drawStudy", desc:"弃1张娱乐牌，抽1张学业牌。"},
-    {id:"so3", name:"义父！", cost:0, type:"social", damage:0, defense:0, gpa:0, moneyCost:10, effect:"gainEnergy1,draw1", desc:"花10生活费。+1精力，抽1牌。"},
+    {id:"so3", name:"义父！", cost:0, type:"social", damage:0, defense:0, gpa:0, moneyCost:20, effect:"gainEnergy1", desc:"花20生活费。+1精力。"},
     {id:"so4", name:"聚餐", cost:0, type:"social", damage:0, defense:0, gpa:0, moneyCost:25, effect:"next2SocialFree", desc:"花25生活费。下2张社交牌免费。"},
     {id:"so5", name:"代签", cost:0, type:"social", damage:10, defense:0, gpa:0, hidden:"noGpaThisBattle", desc:"造成10点伤害。"},
     {id:"so6", name:"我需要朋导！", cost:1, type:"social", damage:0, defense:0, gpa:1, effect:"addStudyCard0Cost", desc:"随机学业牌加入手牌(本回合0耗)。"},
@@ -60,7 +60,7 @@ const enemies = {
             {turn:1, intent:"还有3天", damage:4, effect:"addAnxietyToDraw1", desc:"造成4伤害。抽牌堆+1焦虑。"},
             {turn:2, intent:"还有2天", damage:0, defense:10, effect:"addAnxietyToDiscard2", desc:"获得10效率。弃牌堆+2焦虑。"},
             {turn:3, intent:"明天交！", damage:12, effect:"addAnxietyToHand1", desc:"造成12伤害。手牌+1焦虑。"},
-            {turn:4, intent:"死线降临", damage:18, effect:"gpa-1.0", desc:"造成18伤害，GPA-1.0。"},
+            {turn:4, intent:"死线降临", damage:18, effect:"gpa-0.3", desc:"造成18伤害，GPA-0.3。"},
             {turn:5, intent:"延期/补交", damage:0, effect:"loop", desc:"不行动。重新循环。"}
         ]
     },
@@ -83,7 +83,7 @@ const enemies = {
         hp: 60,
         isElite: true,
         isBoss: false,
-        reward: {money: 100, cardChoice: 3, relic: 1},
+        reward: {money: 80, cardChoice: 2, relic: 1},
         phase1: [
             {turn:1, intent:"起跑的错觉", damage:0, effect:"playerEnergy+1NextTurn", desc:"不造成伤害。下回合精力+1。"},
             {turn:2, intent:"岔气与腹痛", damage:8, effect:"maxCards2ThisTurn", desc:"造成8伤害。本回合最多出2张牌。"},
@@ -100,7 +100,7 @@ const enemies = {
         hp: 160,
         isElite: false,
         isBoss: true,
-        reward: {money: 100, gpa: 2},
+        reward: {money: 100, gpa: 0.5},
         pattern: [
             {turn:1, intent:"发布考试安排表", damage:0, defense:10, effect:"summonMiniDDL2", desc:"召唤2只小DDL。获得10效率。"},
             {turn:2, intent:"考前划重点", damage:10, effect:"addAnxiety2", desc:"造成10伤害。+2焦虑到抽牌堆。"},
@@ -116,7 +116,7 @@ const enemies = {
         pattern: [
             {turn:1, intent:"倒数3", damage:0, desc:"无动作。"},
             {turn:2, intent:"倒数2", damage:5, desc:"造成5伤害。"},
-            {turn:3, intent:"死线爆炸", damage:15, effect:"gpa-0.5,selfDestruct", desc:"造成15伤害，GPA-0.5，自毁。"}
+            {turn:3, intent:"死线爆炸", damage:15, effect:"gpa-0.1,selfDestruct", desc:"造成15伤害，GPA-0.1，自毁。"}
         ]
     }
 };
@@ -266,7 +266,7 @@ const relics = {
     caigen: {name:"嚼过的菜根", type:"legendary", effect:"心态<50%时，精力+1，学业牌伤害+3。", flavor:"嚼得菜根，做得大事。"},
     philosophy: {name:"哲学碎片", type:"legendary", effect:"一回合打出3张牌，随机1张牌消耗变0。", flavor:"降维打击。"},
     // 普通
-    thermos: {name:"保温杯", type:"common", effect:"战斗开始获得8点效率。", flavor:"里面装的不是水，是我的生命。"},
+    thermos: {name:"保温杯", type:"common", effect:"战斗开始获得6点效率。", flavor:"里面装的不是水，是我的生命。"},
     highlighter: {name:"四色荧光笔", type:"common", effect:"每场首张学业牌伤害+50%。", flavor:"划重点是有用的。"},
     headphones: {name:"降噪耳机", type:"common", effect:"战斗第一回合多抽1张牌。", flavor:"世界的喧嚣与我无关。"},
     redbull: {name:"瑞星？", type:"common", effect:"精力上限+1，心态上限-10。", flavor:"烧血？"}

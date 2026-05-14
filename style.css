@@ -1641,7 +1641,7 @@ body {
 }
 
 .demo-watermark::after {
-    content: 'v1.0 测试版';
+    content: 'v1.1 测试版';
     font-size: 9px;
     color: rgba(245, 87, 108, 0.5);
     letter-spacing: 1px;

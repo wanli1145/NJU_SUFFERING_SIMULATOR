@@ -2,7 +2,7 @@
 
 // 游戏状态
 let game = {
-    player: { hp: 100, maxHp: 100, gpa: 3.5, credits: 0, money: 200, energy: 3, maxEnergy: 3, defense: 0 },
+    player: { hp: 100, maxHp: 100, gpa: 3.5, credits: 0, money: 150, energy: 3, maxEnergy: 3, defense: 0 },
     deck: [],
     currentWeekIndex: 0,
     randomEventPool: [...randomEventPool],
@@ -190,7 +190,7 @@ function updateBattleStats() {
 
 // ===== 初始化游戏 =====
 function initGame() {
-    game.player = { hp: 100, maxHp: 100, gpa: 3.5, credits: 0, money: 200, energy: 3, maxEnergy: 3, defense: 0 };
+    game.player = { hp: 100, maxHp: 100, gpa: 3.5, credits: 0, money: 150, energy: 3, maxEnergy: 3, defense: 0 };
     game.deck = [...initialDeck];
     game.currentWeekIndex = 0;
     game.randomEventPool = shuffle([...randomEventPool]);
@@ -653,11 +653,7 @@ function startBattle(enemyKey) {
         game.battle.maxEnergy++;
         game.battle.energy++;
     }
-    // 遗物效果：嚼过的菜根
-    if (game.relicsOwned.includes('caigen') && game.player.hp < game.player.maxHp * 0.5) {
-        game.battle.maxEnergy++;
-        game.battle.energy++;
-    }
+    // 嚼过的菜根的效果在每回合开始时动态检查（startPlayerTurn）
 
     game.player.defense = 0;
     game.statuses.noDamage = false;
@@ -673,11 +669,12 @@ function startBattle(enemyKey) {
     game.statuses.surviveLethal = false;
     game.statuses.strength = 0;
     game.statuses.nextStudyDoubled = false;
+    game.statuses._caigenActive = false;
 
     showScreen('battle-screen');
     // 遗物：保温杯
     if (game.relicsOwned.includes('thermos')) {
-        game.player.defense += 8;
+        game.player.defense += 6;
     }
     startPlayerTurn();
 }
@@ -709,6 +706,17 @@ function startPlayerTurn() {
     game.statuses.maxCardsThisTurn = 99;
 
     // 精力刷新
+    // 遗物：菜根 - 心态<50%时maxEnergy+1
+    if (game.relicsOwned.includes('caigen')) {
+        const lowHp = game.player.hp < game.player.maxHp * 0.5;
+        if (lowHp && !game.statuses._caigenActive) {
+            game.battle.maxEnergy++;
+            game.statuses._caigenActive = true;
+        } else if (!lowHp && game.statuses._caigenActive) {
+            game.battle.maxEnergy--;
+            game.statuses._caigenActive = false;
+        }
+    }
     let energy = game.battle.maxEnergy + game.statuses.nextTurnEnergyMod;
     game.statuses.nextTurnEnergyMod = 0;
     // 帝王蟹诅咒
@@ -928,7 +936,16 @@ function getCurrentEnemyAction(enemy) {
 function canPlayCard(card) {
     if (card.cost === -1) return false; // 诅咒牌不可打出（除焦虑）
     if (card.id === 'c4') return game.battle.energy >= 1; // 焦虑可以打出
-    if (card.cost > game.battle.energy) return false;
+    let effectiveCost = card.cost;
+    // 诺奖签名：每打出2张牌，下张学业牌-1费
+    if (game.relicsOwned.includes('nobel') &&
+        card.type === 'study' &&
+        game.statuses.cardsPlayed > 0 &&
+        game.statuses.cardsPlayed % 2 === 0 &&
+        !game.statuses._nobelUsedThisCycle) {
+        effectiveCost = Math.max(0, effectiveCost - 1);
+    }
+    if (effectiveCost > game.battle.energy) return false;
     if (card.moneyCost && game.player.money < card.moneyCost) return false;
     if (game.statuses.banFun && card.type === 'fun') return false;
     if (game.statuses.banSocial && card.type === 'social') return false;
@@ -1075,6 +1092,15 @@ function executePlayCard(handIdx, cardId, card) {
         cost = 0;
         game.statuses.socialFreeCount--;
     }
+    // 诺奖签名：每2张牌，下张学业牌-1费
+    if (game.relicsOwned.includes('nobel') &&
+        card.type === 'study' &&
+        game.statuses.cardsPlayed > 0 &&
+        game.statuses.cardsPlayed % 2 === 0 &&
+        !game.statuses._nobelUsedThisCycle) {
+        cost = Math.max(0, cost - 1);
+        game.statuses._nobelUsedThisCycle = true;
+    }
     // 过敏性鼻炎：第一张牌+1
     if (game.battle.cardsPlayedThisTurn === 0 && game.battle.hand.includes('c1')) {
         cost++;
@@ -1096,6 +1122,10 @@ function executePlayCard(handIdx, cardId, card) {
     game.battle.hand.splice(handIdx, 1);
     game.battle.cardsPlayedThisTurn++;
     game.statuses.cardsPlayed++;
+    // 重置诺奖签名标记（每打 2 张重置一次）
+    if (game.statuses.cardsPlayed % 2 !== 0) {
+        game.statuses._nobelUsedThisCycle = false;
+    }
 
     // 计算伤害
     let damage = card.damage || 0;
@@ -1224,6 +1254,9 @@ function applyCardEffect(card) {
                 break;
             case 'selfDamage5':
                 game.player.hp -= 5;
+                break;
+            case 'selfDamage8':
+                game.player.hp -= 8;
                 break;
             case 'reduceEnemyDamage3':
                 // 简化：给敌人标记
