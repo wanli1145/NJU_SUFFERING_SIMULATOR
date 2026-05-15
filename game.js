@@ -50,6 +50,106 @@ function showFloatNumber(targetEl, text, type) {
     setTimeout(() => num.remove(), 1000);
 }
 
+// ===== 卡牌大图预览 =====
+const KEYWORD_DEFS = {
+    '专注': '永久叠加学业牌伤害（本场战斗）',
+    '虚弱': '目标造成的伤害降低 50%',
+    '禁止': '本回合无法使用指定类型的牌',
+    '反胃': '下场战斗首回合抽牌 -1',
+    '保留': '回合结束不会被弃，留在手中',
+    '消耗': '打出后从本场战斗永久移除',
+    '固有': '战斗开始必在手牌中',
+    '焦虑': '废牌：抽到无任何正面效果',
+    '效率': '抵扣等量伤害（即护盾），回合开始清零',
+    '抽牌堆': '从牌库抽牌',
+    '弃牌堆': '使用过的牌堆，抽牌堆空时洗回'
+};
+
+function showCardPreview(card) {
+    const panel = document.getElementById('card-preview-panel');
+    if (!panel) return;
+    panel.className = `card-preview-panel type-${card.type}`;
+
+    // 解析描述中包含的关键词
+    let keywordsHtml = '';
+    const matched = new Set();
+    Object.keys(KEYWORD_DEFS).forEach(kw => {
+        if (card.desc && card.desc.includes(kw)) matched.add(kw);
+    });
+    if (matched.size > 0) {
+        keywordsHtml = '<div class="preview-keywords"><div class="enemy-detail-label">关键词</div>';
+        matched.forEach(kw => {
+            keywordsHtml += `<div class="keyword-item"><span class="keyword-name">${kw}</span> · <span class="keyword-desc">${KEYWORD_DEFS[kw]}</span></div>`;
+        });
+        keywordsHtml += '</div>';
+    }
+
+    let creditHtml = '';
+
+    let moneyHtml = '';
+    if (card.moneyCost) moneyHtml = `<div class="preview-credit" style="color:#f5a623">💰 消耗 ${card.moneyCost} 生活费</div>`;
+
+    const costDisplay = card.cost >= 0 ? card.cost : '×';
+    panel.innerHTML = `
+        <div class="preview-header">
+            <div class="preview-cost">${costDisplay}</div>
+            <div class="preview-name">${card.name}</div>
+        </div>
+        <div class="preview-type ${card.type}">${getTypeName(card.type)}</div>
+        <div class="preview-desc">${card.desc}</div>
+        ${moneyHtml}
+        ${creditHtml}
+        ${keywordsHtml}
+    `;
+    panel.classList.remove('hidden');
+}
+
+function hideCardPreview() {
+    const panel = document.getElementById('card-preview-panel');
+    if (panel) panel.classList.add('hidden');
+}
+
+// ===== 敌人详情 =====
+function showEnemyDetail(enemy) {
+    const panel = document.getElementById('enemy-detail-panel');
+    if (!panel) return;
+    const action = getCurrentEnemyAction(enemy);
+    const role = enemy.isBoss ? 'BOSS' : (enemy.isElite ? '精英' : (enemy.isSummon ? '召唤物' : '普通敌人'));
+    let actionDetail = '无意图';
+    if (action) {
+        let parts = [];
+        if (action.damage > 0) parts.push(`<div>⚔️ 造成 <b>${action.damage}</b> 点伤害（基础值）</div>`);
+        if (action.defense > 0) parts.push(`<div>🛡️ 获得 <b>${action.defense}</b> 点效率</div>`);
+        if (action.desc) parts.push(`<div style="color:#aaa;font-size:12px;margin-top:4px;">${action.desc}</div>`);
+        actionDetail = parts.join('');
+    }
+
+    panel.innerHTML = `
+        <div class="enemy-detail-name">${enemy.name}</div>
+        <div class="enemy-detail-section">
+            <div class="enemy-detail-label">类型</div>
+            <div class="enemy-detail-content">${role}</div>
+        </div>
+        <div class="enemy-detail-section">
+            <div class="enemy-detail-label">血量</div>
+            <div class="enemy-detail-content">${enemy.hp} / ${enemy.maxHp}</div>
+        </div>
+        ${enemy.defense > 0 ? `<div class="enemy-detail-section"><div class="enemy-detail-label">护盾</div><div class="enemy-detail-content">🛡️ ${enemy.defense}</div></div>` : ''}
+        ${enemy.weak > 0 ? `<div class="enemy-detail-section"><div class="enemy-detail-label">状态</div><div class="enemy-detail-content" style="color:#ff6b6b">虚弱 ${enemy.weak} 回合</div></div>` : ''}
+        <div class="enemy-detail-section">
+            <div class="enemy-detail-label">下回合行动</div>
+            <div class="enemy-action-name">${action ? action.intent : '无'}</div>
+            <div class="enemy-detail-content">${actionDetail}</div>
+        </div>
+    `;
+    panel.classList.remove('hidden');
+}
+
+function hideEnemyDetail() {
+    const panel = document.getElementById('enemy-detail-panel');
+    if (panel) panel.classList.add('hidden');
+}
+
 // ===== 界面切换 =====
 function showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -809,16 +909,15 @@ function renderBattle() {
         const div = document.createElement('div');
         div.className = `enemy-card ${enemy.isElite ? 'elite' : ''} ${enemy.isBoss ? 'boss' : ''}`;
         const hpPercent = Math.max(0, (enemy.hp / enemy.maxHp) * 100);
-        const intent = getEnemyIntent(enemy);
-        // 计算意图实际对玩家造成的伤害
         const action = getCurrentEnemyAction(enemy);
+        const intent = getEnemyIntent(enemy);
+        const skillName = action ? action.intent : '';
         let actualDmgText = '';
         if (action && action.damage > 0) {
             let dmg = action.damage;
             if (enemy.weak > 0 && !(action.effect && action.effect.includes('ignoreWeak'))) {
                 dmg = Math.floor(dmg * 0.5);
             }
-            // 减去玩家防御
             const playerDef = game.player.defense;
             const realDmg = Math.max(0, dmg - playerDef);
             actualDmgText = `<div class="actual-damage">实际扣血: <b>${realDmg}</b></div>`;
@@ -830,10 +929,14 @@ function renderBattle() {
             </div>
             ${enemy.defense > 0 ? `<div class="enemy-defense">🛡️ ${enemy.defense}</div>` : ''}
             ${enemy.weak > 0 ? `<div class="enemy-defense" style="color:#ff6b6b">虚弱 ${enemy.weak}回合</div>` : ''}
-            <div class="enemy-intent">意图：${intent}</div>
+            <div class="skill-name-below">${skillName}</div>
+            <div class="enemy-intent">${intent}</div>
             ${actualDmgText}
         `;
         div.dataset.idx = idx;
+        // 悬停展示详情
+        div.addEventListener('mouseenter', () => showEnemyDetail(enemy));
+        div.addEventListener('mouseleave', hideEnemyDetail);
         enemiesArea.appendChild(div);
     });
 
@@ -857,10 +960,12 @@ function renderBattle() {
                 el.classList.add('card-drawing');
             }
         }
-        // 拖动出牌：mousedown 启动，移动跟随，松手时检查是否在出牌区
         if (canPlay) {
             attachDragHandler(el, idx);
         }
+        // 悬停大图预览
+        el.addEventListener('mouseenter', () => showCardPreview(card));
+        el.addEventListener('mouseleave', hideCardPreview);
         handArea.appendChild(el);
     });
     game.battle._newlyDrawn = null;
@@ -897,22 +1002,19 @@ function getEnemyIntent(enemy) {
     if (action.defense > 0) parts.push(`🛡️+${action.defense}`);
     if (action.effect) {
         if (action.effect.includes('addAnxiety')) parts.push('📜+焦虑');
-        if (action.effect.includes('banFun')) parts.push('🚫娱乐');
-        if (action.effect.includes('banSocial')) parts.push('🚫社交');
         if (action.effect.includes('banFunAndSocial')) parts.push('🚫娱乐&社交');
+        else if (action.effect.includes('banFun')) parts.push('🚫娱乐');
+        else if (action.effect.includes('banSocial')) parts.push('🚫社交');
         if (action.effect.includes('gpa')) parts.push('📉GPA');
         if (action.effect.includes('summonMiniDDL')) parts.push('👥召唤');
         if (action.effect.includes('playerMaxEnergy') || action.effect.includes('playerEnergy')) parts.push('⚡精力');
         if (action.effect.includes('defenseHalf')) parts.push('⬇️效率减半');
         if (action.effect.includes('maxCards2')) parts.push('✋限出2牌');
         if (action.effect.includes('discardRandom')) parts.push('🗑️弃牌');
-        if (action.effect.includes('doubleDefense')) parts.push('🛡️×2');
-        if (action.effect.includes('ignoreWeak')) parts.push('💀无视虚弱');
-        if (action.effect.includes('loop')) parts.push('🔄');
+        if (action.effect.includes('ignoreWeak')) parts.push('�无视虚弱');
+        if (action.effect.includes('loop')) parts.push('�');
     }
-    let intentStr = action.intent;
-    if (parts.length > 0) intentStr += ' ' + parts.join(' ');
-    return intentStr;
+    return parts.join(' ') || '...';
 }
 
 function getCurrentEnemyAction(enemy) {
@@ -957,15 +1059,11 @@ function createCardElement(card, isChoice) {
     const el = document.createElement('div');
     el.className = `card type-${card.type}`;
     const costDisplay = card.cost >= 0 ? card.cost : '×';
-    let creditTag = '';
-    if (card.gpa && card.gpa > 0) creditTag = `<span class="card-credit-tag">+${card.gpa}学分</span>`;
-    else if (card.gpa && card.gpa < 0) creditTag = `<span class="card-credit-tag negative">${card.gpa}学分</span>`;
     el.innerHTML = `
         <div class="card-cost">${costDisplay}</div>
         <div class="card-name">${card.name}</div>
         <div class="card-desc">${card.desc}</div>
         <div class="card-bottom">
-            ${creditTag}
             <div class="card-type-tag">${getTypeName(card.type)}</div>
         </div>
     `;
@@ -983,6 +1081,8 @@ function attachDragHandler(cardEl, handIdx) {
     const onPointerDown = (e) => {
         // 忽略右键
         if (e.button !== 0) return;
+        // 隐藏卡牌大图预览（避免拖动时遮挡）
+        hideCardPreview();
         isDragging = true;
         hasMoved = false;
         startX = e.clientX;
@@ -1004,7 +1104,7 @@ function attachDragHandler(cardEl, handIdx) {
         const dist = Math.hypot(dx, dy);
         if (dist > dragThreshold) hasMoved = true;
         if (hasMoved) {
-            cardEl.style.transform = `translate(${dx}px, ${dy}px) rotate(0deg) scale(1.1)`;
+            cardEl.style.setProperty('transform', `translate(${dx}px, ${dy}px) rotate(0deg) scale(1.1)`, 'important');
             cardEl.style.boxShadow = '0 20px 50px rgba(102,126,234,0.5)';
             const enemyArea = document.getElementById('enemies-area');
             const inDropZone = e.clientY < (originalRect.top - 50);
@@ -1029,15 +1129,15 @@ function attachDragHandler(cardEl, handIdx) {
 
         if (draggedFarEnough) {
             cardEl.classList.remove('is-dragging');
+            cardEl.style.removeProperty('transform');
             cardEl.style.transition = '';
-            cardEl.style.transform = '';
             cardEl.style.boxShadow = '';
             cardEl.style.opacity = '';
             cardEl.style.zIndex = '';
             playCard(handIdx);
         } else {
             cardEl.style.transition = 'all 0.25s ease-out';
-            cardEl.style.transform = '';
+            cardEl.style.removeProperty('transform');
             cardEl.style.boxShadow = '';
             cardEl.style.opacity = '';
             setTimeout(() => {
@@ -1437,12 +1537,17 @@ function endTurn() {
 
 function enemyTurn() {
     let totalDamageToPlayer = 0;
+    // 清除上一回合的封禁（持续仅一个玩家回合）
+    game.statuses.banFun = false;
+    game.statuses.banSocial = false;
 
-    game.battle.enemies.forEach(enemy => {
+    // 快照：当回合行动的敌人，避免新召唤的敌人在同回合也行动导致意图错位
+    const actingEnemies = [...game.battle.enemies];
+
+    actingEnemies.forEach(enemy => {
         if (enemy.hp <= 0) return;
         // 敌人效率（护盾）回合开始清零
         enemy.defense = 0;
-        enemy.turn++;
         const action = getCurrentEnemyAction(enemy);
         if (!action) return;
 
@@ -1476,15 +1581,17 @@ function enemyTurn() {
 
         // 循环处理
         if (action.effect && action.effect.includes('loop')) {
-            enemy.turn = 0;
+            enemy.turn = -1; // 下面 ++ 后变成 0
         }
         if (action.effect && action.effect.includes('gotoPhase1Turn2')) {
-            enemy.turn = 1; // 回到turn2（因为下次会+1变成2）
+            enemy.turn = 0; // 下面 ++ 后变成 1（即第二回合）
         }
         // 自毁
         if (action.effect && action.effect.includes('selfDestruct')) {
             enemy.hp = 0;
         }
+        // 回合数++（在动作执行后，确保下次会取下一个意图）
+        enemy.turn++;
     });
 
     // 应用伤害到玩家

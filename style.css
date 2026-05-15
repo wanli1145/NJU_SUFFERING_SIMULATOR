@@ -632,23 +632,23 @@ body {
 .player-battle-panel {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     background: linear-gradient(135deg, #1a3a5c, #2a4a6c);
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px;
-    padding: 10px 18px;
+    border-radius: 14px;
+    padding: 14px 24px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
 
 .player-avatar-battle {
-    width: 44px;
-    height: 44px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background: linear-gradient(135deg, #667eea, #764ba2);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 28px;
     border: 2px solid rgba(255,255,255,0.3);
     flex-shrink: 0;
 }
@@ -656,45 +656,47 @@ body {
 .player-battle-info {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    min-width: 200px;
+    gap: 8px;
+    min-width: 280px;
 }
 
 .player-hp-section {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
 }
 
 .hp-label {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: bold;
 }
 
 .player-hp-bar {
     width: 100%;
-    height: 12px;
+    height: 18px;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
+    border-radius: 9px;
     overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .player-hp-fill {
     height: 100%;
     background: linear-gradient(90deg, #e74c3c, #ff6b6b);
-    border-radius: 6px;
+    border-radius: 9px;
     transition: width 0.4s ease;
 }
 
 .player-battle-row {
     display: flex;
-    gap: 14px;
+    gap: 18px;
 }
 
 .battle-stat {
-    font-size: 13px;
-    color: #ccc;
+    font-size: 16px;
+    color: #ddd;
+    font-weight: 500;
 }
 
 .battle-field {
@@ -715,9 +717,9 @@ body {
 .enemy-card {
     background: rgba(255, 50, 50, 0.1);
     border: 2px solid rgba(255, 50, 50, 0.3);
-    border-radius: 12px;
-    padding: 20px;
-    min-width: 180px;
+    border-radius: 14px;
+    padding: 24px 28px;
+    min-width: 220px;
     text-align: center;
     transition: all 0.3s;
 }
@@ -730,13 +732,13 @@ body {
 .enemy-card.boss {
     border-color: rgba(200, 0, 255, 0.5);
     background: rgba(200, 0, 255, 0.1);
-    min-width: 220px;
+    min-width: 280px;
 }
 
 .enemy-name {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     color: #ff6b6b;
 }
 
@@ -746,19 +748,24 @@ body {
 
 .enemy-card.boss .enemy-name {
     color: #c850ff;
+    font-size: 24px;
 }
 
 .enemy-hp {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: bold;
 }
 
 .enemy-hp-bar {
     width: 100%;
-    height: 8px;
+    height: 14px;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    border-radius: 7px;
     overflow: hidden;
-    margin-top: 4px;
+    margin-top: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .enemy-hp-fill {
@@ -768,33 +775,33 @@ body {
 }
 
 .enemy-intent {
-    font-size: 13px;
+    font-size: 15px;
     color: #ffa502;
-    margin-top: 10px;
-    padding: 8px 10px;
+    margin-top: 12px;
+    padding: 10px 12px;
     background: rgba(255, 165, 2, 0.1);
     border: 1px solid rgba(255, 165, 2, 0.25);
-    border-radius: 6px;
+    border-radius: 8px;
     line-height: 1.5;
-}
-
-.enemy-intent .intent-label {
-    font-size: 11px;
-    color: #888;
-    display: block;
-    margin-bottom: 2px;
-}
-
-.enemy-intent .intent-icons {
-    font-size: 14px;
-    font-weight: bold;
-    color: #ff6b6b;
+    font-weight: 500;
 }
 
 .enemy-defense {
-    font-size: 13px;
+    font-size: 15px;
     color: #70a1ff;
-    margin-top: 4px;
+    margin-top: 6px;
+    font-weight: bold;
+}
+
+.enemy-card .skill-name-below {
+    font-size: 13px;
+    color: #ffa502;
+    margin-top: 6px;
+    padding: 4px 10px;
+    background: rgba(255, 165, 2, 0.12);
+    border-radius: 5px;
+    display: inline-block;
+    font-weight: 500;
 }
 
 .battle-status {
@@ -1010,18 +1017,24 @@ body {
 .hand-area .card:nth-child(8) { transform: rotate(12deg) translateY(14px); }
 
 .hand-area .card:hover {
-    transform: translateY(-35px) rotate(0deg) scale(1.15) !important;
+    transform: translateY(-25px) rotate(0deg) scale(1.08) !important;
     z-index: 20;
-    margin: 0 6px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 25px rgba(102,126,234,0.3);
 }
 
 .hand-area .card.is-dragging,
-.hand-area .card.is-dragging:hover {
-    transform: none !important;
+.hand-area .card.is-dragging:hover,
+.hand-area .card.is-dragging:nth-child(1),
+.hand-area .card.is-dragging:nth-child(2),
+.hand-area .card.is-dragging:nth-child(3),
+.hand-area .card.is-dragging:nth-child(4),
+.hand-area .card.is-dragging:nth-child(5),
+.hand-area .card.is-dragging:nth-child(6),
+.hand-area .card.is-dragging:nth-child(7),
+.hand-area .card.is-dragging:nth-child(8) {
     transition: none !important;
-    margin: 0 -10px !important;
-    pointer-events: none;
+    pointer-events: auto !important;
+    cursor: grabbing !important;
 }
 
 .hand-area .card.disabled {
@@ -1030,7 +1043,6 @@ body {
 
 .hand-area .card.disabled:hover {
     transform: translateY(-5px) rotate(0deg) scale(1.02) !important;
-    margin: 0 -10px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.4);
 }
 
@@ -1641,7 +1653,7 @@ body {
 }
 
 .demo-watermark::after {
-    content: 'v1.1 测试版';
+    content: 'v1.2 测试版';
     font-size: 9px;
     color: rgba(245, 87, 108, 0.5);
     letter-spacing: 1px;
@@ -1738,17 +1750,18 @@ body {
 
 /* 实际伤害预览 */
 .actual-damage {
-    margin-top: 6px;
-    font-size: 12px;
+    margin-top: 8px;
+    font-size: 14px;
     color: #ff4757;
-    background: rgba(255, 71, 87, 0.08);
-    padding: 4px 6px;
-    border-radius: 4px;
-    border: 1px dashed rgba(255, 71, 87, 0.3);
+    background: rgba(255, 71, 87, 0.1);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px dashed rgba(255, 71, 87, 0.4);
+    font-weight: 500;
 }
 
 .actual-damage b {
-    font-size: 14px;
+    font-size: 18px;
     color: #ff6b81;
 }
 
@@ -1828,3 +1841,167 @@ body {
 .enemies-area.drop-zone-active .drag-hint {
     opacity: 1;
 }
+
+
+/* ===== 卡牌大图预览面板（右侧）===== */
+.card-preview-panel {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 240px;
+    background: linear-gradient(160deg, #2d2d44 0%, #1a1a2e 100%);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+    z-index: 50;
+    pointer-events: none;
+    animation: previewIn 0.2s ease-out;
+}
+
+.card-preview-panel.type-study { border-color: rgba(78, 205, 196, 0.6); }
+.card-preview-panel.type-fun { border-color: rgba(255, 107, 107, 0.6); }
+.card-preview-panel.type-social { border-color: rgba(255, 217, 61, 0.6); }
+.card-preview-panel.type-curse { border-color: rgba(128, 0, 128, 0.6); }
+.card-preview-panel.type-initial { border-color: rgba(200, 200, 200, 0.4); }
+
+@keyframes previewIn {
+    from { opacity: 0; transform: translateY(-50%) translateX(20px); }
+    to { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.preview-cost {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #667eea, #5a4fcf);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.preview-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #f5f5f5;
+    flex: 1;
+}
+
+.preview-type {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: inline-block;
+}
+
+.preview-type.study { background: rgba(78,205,196,0.15); color: #4ecdc4; }
+.preview-type.fun { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+.preview-type.social { background: rgba(255,217,61,0.15); color: #ffd93d; }
+.preview-type.curse { background: rgba(142,68,173,0.15); color: #c850ff; }
+.preview-type.initial { background: rgba(189,195,199,0.15); color: #bdc3c7; }
+
+.preview-desc {
+    font-size: 14px;
+    color: #ddd;
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+
+.preview-keywords {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.keyword-item {
+    margin-bottom: 6px;
+    font-size: 11px;
+}
+
+.keyword-name {
+    color: #f5a623;
+    font-weight: bold;
+}
+
+.keyword-desc {
+    color: #aaa;
+}
+
+.preview-credit {
+    font-size: 11px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.preview-credit.positive { color: #4ecdc4; }
+.preview-credit.negative { color: #ff6b6b; }
+
+/* ===== 敌人详情面板（怪物悬停时显示）===== */
+.enemy-detail-panel {
+    position: fixed;
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 260px;
+    background: linear-gradient(160deg, #3a1a1a 0%, #1a1a2e 100%);
+    border: 2px solid rgba(255, 107, 107, 0.5);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    z-index: 50;
+    pointer-events: none;
+    animation: enemyDetailIn 0.2s ease-out;
+}
+
+@keyframes enemyDetailIn {
+    from { opacity: 0; transform: translateY(-50%) translateX(-20px); }
+    to { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+.enemy-detail-name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ff6b6b;
+    margin-bottom: 10px;
+}
+
+.enemy-detail-section {
+    margin-bottom: 12px;
+}
+
+.enemy-detail-label {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
+
+.enemy-detail-content {
+    font-size: 13px;
+    color: #ddd;
+    line-height: 1.6;
+}
+
+.enemy-action-name {
+    font-size: 14px;
+    color: #ffa502;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+/* 怪物名字下方显示技能名 - 已在上方定义，此处无需重复 */
