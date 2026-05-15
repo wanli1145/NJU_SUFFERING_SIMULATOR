@@ -97,7 +97,7 @@
                 </div>
                 <div class="gpa-chart-mini">
                     <div class="gpa-chart-label">GPA 走势</div>
-                    <canvas id="gpa-chart-mini" width="180" height="60"></canvas>
+                    <canvas id="gpa-chart-mini" width="280" height="84"></canvas>
                 </div>
                 <div class="player-stats">
                     <div class="campus-card">
@@ -125,6 +125,7 @@
 
         <!-- 事件界面 -->
         <div id="event-screen" class="screen">
+            <button id="btn-settings-event" class="btn-settings" title="设置">⚙️</button>
             <div class="top-bar">
                 <div class="week-display">
                     <div class="calendar-icon">
@@ -158,6 +159,7 @@
 
         <!-- 战斗界面 -->
         <div id="battle-screen" class="screen">
+            <button id="btn-settings-battle" class="btn-settings" title="设置">⚙️</button>
             <div class="battle-top-bar">
                 <div class="player-battle-panel">
                     <div class="player-avatar-battle">🎓</div>
@@ -174,6 +176,10 @@
                             <span class="battle-stat">💰 <span id="battle-money">200</span></span>
                         </div>
                     </div>
+                </div>
+                <div class="gpa-chart-mini battle-gpa-chart">
+                    <div class="gpa-chart-label">GPA 走势</div>
+                    <canvas id="gpa-chart-battle" width="220" height="68"></canvas>
                 </div>
             </div>
             <div class="battle-field">

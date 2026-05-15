@@ -209,58 +209,146 @@ function updateRelicBar() {
 }
 
 function drawGpaMiniChart() {
-    const canvas = document.getElementById('gpa-chart-mini');
+    // 绘制到地图界面和战斗界面两个 canvas
+    drawGpaOnCanvas(document.getElementById('gpa-chart-mini'));
+    drawGpaOnCanvas(document.getElementById('gpa-chart-battle'));
+}
+
+function drawGpaOnCanvas(canvas) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    const data = (game.gpaHistory && game.gpaHistory.length > 0) ? game.gpaHistory : [game.player.gpa];
-    const maxGpa = 5.0, minGpa = 0;
-    const padX = 4, padY = 4;
-    const plotW = w - padX * 2, plotH = h - padY * 2;
+    // 兼容新旧格式：可能是 [3.5] 或 [{gpa, label, weekIdx}]
+    const rawHistory = (game.gpaHistory && game.gpaHistory.length > 0) ? game.gpaHistory : [{ gpa: game.player.gpa, label: '当前' }];
+    const data = rawHistory.map(p => typeof p === 'number' ? { gpa: p, label: '' } : p);
 
-    // 警戒线
-    [2.0, 3.0, 4.0].forEach(threshold => {
-        const y = padY + plotH - ((threshold - minGpa) / (maxGpa - minGpa)) * plotH;
-        ctx.strokeStyle = threshold === 2.0 ? 'rgba(231,76,60,0.4)' : 'rgba(255,255,255,0.08)';
-        ctx.setLineDash([3, 3]);
+    const maxGpa = 5.0, minGpa = 0;
+    const padL = 28, padR = 12, padT = 16, padB = 6;
+    const plotW = w - padL - padR;
+    const plotH = h - padT - padB;
+
+    // 背景
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(0, 0, w, h);
+
+    // 警戒线 + 标签
+    const thresholds = [
+        { val: 4.8, color: 'rgba(200,0,255,0.4)', textColor: '#c850ff', label: '4.8' },
+        { val: 4.0, color: 'rgba(255,255,255,0.15)', textColor: '#888', label: '4.0' },
+        { val: 3.0, color: 'rgba(255,165,0,0.35)', textColor: '#ffa502', label: '3.0' },
+        { val: 2.0, color: 'rgba(231,76,60,0.55)', textColor: '#e74c3c', label: '2.0' }
+    ];
+    thresholds.forEach(t => {
+        const y = padT + plotH - ((t.val - minGpa) / (maxGpa - minGpa)) * plotH;
+        ctx.strokeStyle = t.color;
+        ctx.setLineDash([3, 4]);
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(padX, y);
-        ctx.lineTo(w - padX, y);
+        ctx.moveTo(padL, y);
+        ctx.lineTo(w - padR, y);
         ctx.stroke();
         ctx.setLineDash([]);
+        ctx.fillStyle = t.textColor;
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(t.label, padL - 3, y + 3);
     });
 
-    // 折线
-    if (data.length >= 2) {
-        ctx.strokeStyle = '#f5576c';
-        ctx.lineWidth = 1.8;
+    if (data.length < 2) {
+        const gpa = data[0].gpa;
+        const x = padL + plotW / 2;
+        const y = padT + plotH - ((gpa - minGpa) / (maxGpa - minGpa)) * plotH;
+        ctx.fillStyle = 'rgba(245,87,108,0.25)';
         ctx.beginPath();
-        data.forEach((gpa, i) => {
-            const x = padX + (i / (data.length - 1)) * plotW;
-            const y = padY + plotH - ((gpa - minGpa) / (maxGpa - minGpa)) * plotH;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f5576c';
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(gpa.toFixed(2), x, y - 10);
+        return;
     }
 
-    // 当前点
-    const lastVal = data[data.length - 1];
-    const lastX = data.length >= 2 ? padX + plotW : padX + plotW / 2;
-    const lastY = padY + plotH - ((lastVal - minGpa) / (maxGpa - minGpa)) * plotH;
-    ctx.fillStyle = '#f5576c';
+    // 渐变填充区域（折线下方）
+    const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+    grad.addColorStop(0, 'rgba(245,87,108,0.35)');
+    grad.addColorStop(1, 'rgba(245,87,108,0.0)');
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
+    data.forEach((pt, i) => {
+        const x = padL + (i / (data.length - 1)) * plotW;
+        const y = padT + plotH - ((pt.gpa - minGpa) / (maxGpa - minGpa)) * plotH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.lineTo(padL + plotW, padT + plotH);
+    ctx.lineTo(padL, padT + plotH);
+    ctx.closePath();
     ctx.fill();
 
-    // 当前数值
+    // 折线（带阴影）
+    ctx.shadowColor = 'rgba(245,87,108,0.5)';
+    ctx.shadowBlur = 4;
+    ctx.strokeStyle = '#f5576c';
+    ctx.lineWidth = 2.2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    data.forEach((pt, i) => {
+        const x = padL + (i / (data.length - 1)) * plotW;
+        const y = padT + plotH - ((pt.gpa - minGpa) / (maxGpa - minGpa)) * plotH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // 数据点（关键点突出）
+    data.forEach((pt, i) => {
+        const x = padL + (i / (data.length - 1)) * plotW;
+        const y = padT + plotH - ((pt.gpa - minGpa) / (maxGpa - minGpa)) * plotH;
+        const isFirst = i === 0;
+        const isLast = i === data.length - 1;
+        const delta = i > 0 ? Math.abs(pt.gpa - data[i - 1].gpa) : 0;
+        const isSignificant = delta >= 0.1;
+
+        if (isFirst || isLast || isSignificant) {
+            if (isLast) {
+                ctx.fillStyle = 'rgba(245,87,108,0.3)';
+                ctx.beginPath();
+                ctx.arc(x, y, 9, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            // 主点
+            ctx.fillStyle = isLast ? '#ff4757' : (isSignificant ? '#ffa502' : '#f5576c');
+            ctx.beginPath();
+            ctx.arc(x, y, isLast ? 4 : 3, 0, Math.PI * 2);
+            ctx.fill();
+            // 内白点
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(x, y, isLast ? 2 : 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // 一般点小一点
+            ctx.fillStyle = 'rgba(245,87,108,0.6)';
+            ctx.beginPath();
+            ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    });
+
+    // 当前 GPA 数值（右上）
+    const lastGpa = data[data.length - 1].gpa;
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 11px sans-serif';
+    ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(lastVal.toFixed(2), w - 4, 12);
+    ctx.fillText('GPA ' + lastGpa.toFixed(2), w - padR, 12);
 }
 
 function updateBattleStats() {
@@ -304,7 +392,7 @@ function initGame() {
         cardsPlayed: 0, highlighterUsed: false, loseDefenseNext: 0, maxCardsThisTurn: 99 };
     game.pendingAction = null;
     game.gpaWarningTriggered = { level1: false, level2: false, expelled: false };
-    game.gpaHistory = [3.5];
+    game.gpaHistory = [{ gpa: 3.5, label: '入学', weekIdx: 0 }];
     updateAllStats();
     showScreen('map-screen');
     showCurrentWeek();
@@ -379,7 +467,8 @@ function advanceWeek() {
     // 学分结算：每10学分转为0.1 GPA（向零取整余数保留）
     settleCredits();
     // 记录GPA历史
-    game.gpaHistory.push(game.player.gpa);
+    const weekDef = weekSchedule[Math.min(game.currentWeekIndex, weekSchedule.length - 1)];
+    recordGpa(weekDef ? `第${13 - weekDef.week}周` : '结局');
     // 自动存档
     saveGame();
     checkGpaWarning(() => {
@@ -397,6 +486,18 @@ function settleCredits() {
         game.player.gpa = Math.min(5.0, Math.max(0, game.player.gpa + conversion * 0.1));
         game.player.credits -= conversion * 10;
     }
+}
+
+// 记录GPA到历史（用于折线图）
+function recordGpa(label) {
+    if (!game.gpaHistory) game.gpaHistory = [];
+    game.gpaHistory.push({
+        gpa: parseFloat(game.player.gpa.toFixed(2)),
+        label: label || '',
+        weekIdx: game.currentWeekIndex
+    });
+    // 限制历史长度
+    if (game.gpaHistory.length > 60) game.gpaHistory.shift();
 }
 
 function checkGpaWarning(callback) {
@@ -439,7 +540,8 @@ function drawGpaChart() {
     const w = canvas.width, h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    const data = game.gpaHistory;
+    const rawHistory = game.gpaHistory || [];
+    const data = rawHistory.map(p => typeof p === 'number' ? { gpa: p, label: '' } : p);
     if (data.length < 2) return;
 
     const maxGpa = 5.0, minGpa = 0;
@@ -469,9 +571,9 @@ function drawGpaChart() {
     ctx.strokeStyle = '#f5576c';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    data.forEach((gpa, i) => {
+    data.forEach((pt, i) => {
         const x = padX + (i / (data.length - 1)) * plotW;
-        const y = padY + plotH - ((gpa - minGpa) / (maxGpa - minGpa)) * plotH;
+        const y = padY + plotH - ((pt.gpa - minGpa) / (maxGpa - minGpa)) * plotH;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
     });
@@ -479,14 +581,14 @@ function drawGpaChart() {
 
     // 当前点
     const lastX = padX + plotW;
-    const lastY = padY + plotH - ((data[data.length - 1] - minGpa) / (maxGpa - minGpa)) * plotH;
+    const lastY = padY + plotH - ((data[data.length - 1].gpa - minGpa) / (maxGpa - minGpa)) * plotH;
     ctx.fillStyle = '#f5576c';
     ctx.beginPath();
     ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 10px sans-serif';
-    ctx.fillText(data[data.length - 1].toFixed(2), lastX - 15, lastY - 8);
+    ctx.fillText(data[data.length - 1].gpa.toFixed(2), lastX - 15, lastY - 8);
 }
 
 
@@ -551,7 +653,12 @@ function resolveEventChoice(choice) {
         effectStr = choice.effect || '';
     }
 
+    const oldGpa = game.player.gpa;
     applyEventEffect(effectStr);
+    // 如果GPA有变化，记录一次
+    if (Math.abs(game.player.gpa - oldGpa) > 0.01) {
+        recordGpa('事件');
+    }
     document.getElementById('event-result-text').textContent = resultText;
     document.getElementById('event-result-effect').textContent = choice.effectDesc || describeEffect(effectStr);
     updateAllStats();
@@ -1766,6 +1873,12 @@ function endBattle(victory) {
     game.statuses.banSocial = false;
     game.statuses.surviveLethal = false;
 
+    // 战斗结束记录GPA到历史（结算学分换算）
+    settleCredits();
+    const enemyKey = game.battle.enemyKey;
+    const enemyName = enemies[enemyKey] ? enemies[enemyKey].name : '战斗';
+    recordGpa('击败' + enemyName);
+
     // 发放奖励
     const enemyData = enemies[game.battle.enemyKey];
     if (enemyData.reward) {
@@ -1924,6 +2037,10 @@ document.getElementById('discard-pile-visual').onclick = () => showPileModal('di
 document.getElementById('btn-settings').onclick = () => {
     document.getElementById('settings-modal').classList.remove('hidden');
 };
+const battleSettingsBtn = document.getElementById('btn-settings-battle');
+if (battleSettingsBtn) battleSettingsBtn.onclick = () => document.getElementById('settings-modal').classList.remove('hidden');
+const eventSettingsBtn = document.getElementById('btn-settings-event');
+if (eventSettingsBtn) eventSettingsBtn.onclick = () => document.getElementById('settings-modal').classList.remove('hidden');
 document.getElementById('btn-settings-close').onclick = () => {
     document.getElementById('settings-modal').classList.add('hidden');
 };
@@ -2210,7 +2327,11 @@ function applySaveData(saveData) {
     game.relicsOwned = saveData.relicsOwned || [];
     game.itemsOwned = saveData.itemsOwned || [];
     game.gpaWarningTriggered = saveData.gpaWarningTriggered || { level1:false, level2:false, expelled:false };
-    game.gpaHistory = saveData.gpaHistory || [3.5];
+    game.gpaHistory = saveData.gpaHistory || [{ gpa: 3.5, label: '入学', weekIdx: 0 }];
+    // 兼容旧版（数字数组格式）
+    if (game.gpaHistory.length > 0 && typeof game.gpaHistory[0] === 'number') {
+        game.gpaHistory = game.gpaHistory.map((g, i) => ({ gpa: g, label: i === 0 ? '入学' : `周${i}`, weekIdx: i }));
+    }
     game.statuses = saveData.statuses;
     game.battle = null;
     game.pendingAction = null;
