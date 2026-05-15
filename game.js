@@ -1121,25 +1121,11 @@ function attachDragHandler(cardEl, handIdx) {
         const enemyArea = document.getElementById('enemies-area');
         enemyArea.classList.remove('drop-zone-active');
 
-        // 改：只要有效拖动（移动距离>阈值），无论方向都判定为出牌
-        if (hasMoved) {
-            cardEl.classList.remove('is-dragging');
-            cardEl.style.removeProperty('transform');
-            cardEl.style.transition = '';
-            cardEl.style.boxShadow = '';
-            cardEl.style.opacity = '';
-            cardEl.style.zIndex = '';
-            playCard(handIdx);
-        } else {
-            // 没移动（基本是点击）→ 直接也视为出牌
-            cardEl.classList.remove('is-dragging');
-            cardEl.style.removeProperty('transform');
-            cardEl.style.transition = '';
-            cardEl.style.boxShadow = '';
-            cardEl.style.opacity = '';
-            cardEl.style.zIndex = '';
-            playCard(handIdx);
-        }
+        // 任何释放（移动或点击）都算出牌；卡牌停在松手位置
+        cardEl.classList.remove('is-dragging');
+        cardEl.style.transition = 'none';
+        // 不重置 transform：保留拖动结束位置
+        playCard(handIdx);
     };
 
     cardEl.addEventListener('pointerdown', onPointerDown);
@@ -1156,26 +1142,27 @@ function playCard(handIdx) {
     let cost = card.cost;
     if (card.type === 'social' && game.statuses.socialFreeCount > 0) cost = 0;
     if (game.battle.cardsPlayedThisTurn === 0 && game.battle.hand.includes('c1')) cost++;
-    // 临时显示精力数（不真扣，executePlayCard 才真扣）
     const energyEl = document.getElementById('battle-energy');
     if (energyEl && cost > 0) {
         const currentMaxText = `/${game.battle.maxEnergy}`;
         const newEnergy = Math.max(0, game.battle.energy - Math.max(0, cost));
         energyEl.textContent = `${newEnergy}${currentMaxText}`;
-        // 飞起精力消耗数字
         const panel = document.querySelector('.player-battle-panel');
         if (panel && cost > 0) showFloatNumber(panel, `-${cost}⚡`, 'shield');
     }
 
-    // 播放出牌动画（向上飞）
+    // 出牌特效：拖到了哪儿就在哪儿淡出
     const handArea = document.getElementById('hand-area');
     const cardEl = handArea.children[handIdx];
     if (cardEl) {
-        cardEl.classList.add('card-playing');
+        cardEl.style.transition = 'opacity 0.3s ease-out, filter 0.3s ease-out';
+        cardEl.style.opacity = '0';
+        cardEl.style.filter = 'brightness(2)';
+        cardEl.style.pointerEvents = 'none';
     }
 
-    // 延迟执行实际逻辑让动画播放
-    setTimeout(() => { executePlayCard(handIdx, cardId, card); }, 350);}
+    setTimeout(() => { executePlayCard(handIdx, cardId, card); }, 280);
+}
 
 function executePlayCard(handIdx, cardId, card) {
 
@@ -1894,15 +1881,41 @@ document.getElementById('btn-pile-modal-close').onclick = () => document.getElem
 document.getElementById('draw-pile-visual').onclick = () => showPileModal('draw');
 document.getElementById('discard-pile-visual').onclick = () => showPileModal('discard');
 
+// 设置按钮和存档槽
+document.getElementById('btn-settings').onclick = () => {
+    document.getElementById('settings-modal').classList.remove('hidden');
+};
+document.getElementById('btn-settings-close').onclick = () => {
+    document.getElementById('settings-modal').classList.add('hidden');
+};
+document.getElementById('btn-write-leave').onclick = () => {
+    document.getElementById('settings-modal').classList.add('hidden');
+    showSaveSlotsModal('save');
+};
+document.getElementById('btn-load-leave').onclick = () => {
+    document.getElementById('settings-modal').classList.add('hidden');
+    showSaveSlotsModal('load');
+};
+document.getElementById('btn-back-to-start').onclick = () => {
+    if (confirm('确定要回到开始界面吗？\n（未存档的进度会丢失）')) {
+        document.getElementById('settings-modal').classList.add('hidden');
+        showScreen('start-screen');
+    }
+};
+document.getElementById('btn-save-slots-close').onclick = () => {
+    document.getElementById('save-slots-modal').classList.add('hidden');
+};
+
 // ===== 测试者通道 =====
 setupDebugPanel();
 
 function setupDebugPanel() {
     const panel = document.getElementById('debug-panel');
     if (!panel) return;
-    // 按 ~ 键开关
+    // 按 F2 / Ctrl+D 开关
     document.addEventListener('keydown', (e) => {
-        if (e.key === '`' || e.key === '~') {
+        if (e.key === 'F2' || (e.ctrlKey && (e.key === 'd' || e.key === 'D'))) {
+            e.preventDefault();
             panel.classList.toggle('hidden');
             if (!panel.classList.contains('hidden')) refreshDebugPanel();
         }
@@ -2126,47 +2139,69 @@ function showPileModal(which) {
     }
     document.getElementById('pile-modal').classList.remove('hidden');
 }
+
+// ===== 存档功能（多槽位 / 假条）=====
+const SAVE_KEY_PREFIX = 'nju_suffering_save_slot_';
+const SAVE_LEGACY_KEY = 'nju_suffering_save';
+const MAX_SLOTS = 3;
+
+function buildSaveData() {
+    return {
+        player: game.player,
+        deck: game.deck,
+        currentWeekIndex: game.currentWeekIndex,
+        randomEventPool: game.randomEventPool,
+        relicsOwned: game.relicsOwned,
+        itemsOwned: game.itemsOwned,
+        gpaWarningTriggered: game.gpaWarningTriggered,
+        gpaHistory: game.gpaHistory,
+        statuses: game.statuses,
+        savedAt: new Date().toISOString()
+    };
+}
+
+function applySaveData(saveData) {
+    game.player = saveData.player;
+    game.deck = saveData.deck;
+    game.currentWeekIndex = saveData.currentWeekIndex;
+    game.randomEventPool = saveData.randomEventPool || [];
+    game.relicsOwned = saveData.relicsOwned || [];
+    game.itemsOwned = saveData.itemsOwned || [];
+    game.gpaWarningTriggered = saveData.gpaWarningTriggered || { level1:false, level2:false, expelled:false };
+    game.gpaHistory = saveData.gpaHistory || [3.5];
+    game.statuses = saveData.statuses;
+    game.battle = null;
+    game.pendingAction = null;
+}
+
 function saveGame() {
     try {
-        const saveData = {
-            player: game.player,
-            deck: game.deck,
-            currentWeekIndex: game.currentWeekIndex,
-            randomEventPool: game.randomEventPool,
-            relicsOwned: game.relicsOwned,
-            itemsOwned: game.itemsOwned,
-            gpaWarningTriggered: game.gpaWarningTriggered,
-            gpaHistory: game.gpaHistory,
-            statuses: game.statuses,
-            savedAt: new Date().toISOString()
-        };
-        localStorage.setItem('nju_suffering_save', JSON.stringify(saveData));
+        localStorage.setItem(SAVE_LEGACY_KEY, JSON.stringify(buildSaveData()));
         return true;
-    } catch (e) {
-        console.error('存档失败', e);
-        return false;
-    }
+    } catch (e) { console.error('自动存档失败', e); return false; }
 }
 
 function loadGame() {
-    const raw = localStorage.getItem('nju_suffering_save');
-    if (!raw) {
+    let latest = null;
+    for (let i = 0; i < MAX_SLOTS; i++) {
+        const raw = localStorage.getItem(SAVE_KEY_PREFIX + i);
+        if (raw) {
+            try {
+                const data = JSON.parse(raw);
+                if (!latest || (data.savedAt > latest.savedAt)) latest = data;
+            } catch (e) {}
+        }
+    }
+    if (!latest) {
+        const legacy = localStorage.getItem(SAVE_LEGACY_KEY);
+        if (legacy) { try { latest = JSON.parse(legacy); } catch (e) {} }
+    }
+    if (!latest) {
         alert('没有找到返校档案。\n请先「入学」开始一段新的旅程。');
         return;
     }
     try {
-        const saveData = JSON.parse(raw);
-        game.player = saveData.player;
-        game.deck = saveData.deck;
-        game.currentWeekIndex = saveData.currentWeekIndex;
-        game.randomEventPool = saveData.randomEventPool;
-        game.relicsOwned = saveData.relicsOwned || [];
-        game.itemsOwned = saveData.itemsOwned || [];
-        game.gpaWarningTriggered = saveData.gpaWarningTriggered || { level1:false, level2:false, expelled:false };
-        game.gpaHistory = saveData.gpaHistory || [3.5];
-        game.statuses = saveData.statuses;
-        game.battle = null;
-        game.pendingAction = null;
+        applySaveData(latest);
         updateAllStats();
         showScreen('map-screen');
         showCurrentWeek();
@@ -2174,4 +2209,121 @@ function loadGame() {
         alert('返校档案损坏，无法读取。');
         console.error(e);
     }
+}
+
+function getSlotData(idx) {
+    const raw = localStorage.getItem(SAVE_KEY_PREFIX + idx);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+}
+
+function saveToSlot(idx) {
+    try {
+        localStorage.setItem(SAVE_KEY_PREFIX + idx, JSON.stringify(buildSaveData()));
+        return true;
+    } catch (e) {
+        alert('写假条失败：' + e.message);
+        return false;
+    }
+}
+
+function loadFromSlot(idx) {
+    const data = getSlotData(idx);
+    if (!data) return;
+    applySaveData(data);
+    updateAllStats();
+    closeAllModals();
+    showScreen('map-screen');
+    showCurrentWeek();
+}
+
+function deleteSlot(idx) {
+    if (!confirm('确定要撕掉这张假条吗？')) return;
+    localStorage.removeItem(SAVE_KEY_PREFIX + idx);
+    showSaveSlotsModal(currentSaveMode);
+}
+
+let currentSaveMode = 'save';
+
+function showSaveSlotsModal(mode) {
+    currentSaveMode = mode;
+    const modal = document.getElementById('save-slots-modal');
+    const title = document.getElementById('save-slots-title');
+    const hint = document.getElementById('save-slots-hint');
+    title.textContent = mode === 'save' ? '📝 写假条（存档）' : '📋 取假条（读档）';
+    hint.textContent = mode === 'save'
+        ? '选择一个假条位置（最多3张，覆盖原假条会丢失）'
+        : '选择要读取的假条';
+
+    const list = document.getElementById('save-slots-list');
+    list.innerHTML = '';
+    for (let i = 0; i < MAX_SLOTS; i++) {
+        const data = getSlotData(i);
+        const slot = document.createElement('div');
+        slot.className = 'save-slot' + (data ? '' : ' empty');
+
+        if (data) {
+            const weekIdx = data.currentWeekIndex || 0;
+            const weekDef = weekSchedule[Math.min(weekIdx, weekSchedule.length - 1)];
+            const weekNum = weekDef ? weekDef.week : 0;
+            const progress = Math.min(100, Math.round((weekIdx / weekSchedule.length) * 100));
+            const time = data.savedAt ? new Date(data.savedAt).toLocaleString('zh-CN') : '未知';
+            const hp = data.player ? Math.round(data.player.hp) : 0;
+            const maxHp = data.player ? data.player.maxHp : 100;
+            const gpa = data.player ? data.player.gpa.toFixed(2) : '?';
+            const money = data.player ? data.player.money : 0;
+            const relics = (data.relicsOwned || []).length;
+
+            slot.innerHTML = `
+                <button class="save-slot-delete" data-slot="${i}" title="删除">×</button>
+                <div class="save-slot-header">
+                    <span class="save-slot-title">第 ${i + 1} 张假条</span>
+                    <span class="save-slot-time">${time}</span>
+                </div>
+                <div class="save-slot-progress">
+                    <div class="save-slot-week">📅 ${weekDef ? weekDef.name : '已结束'}（距期末 ${weekNum} 周）</div>
+                    <div class="save-slot-progress-bar">
+                        <div class="save-slot-progress-fill" style="width:${progress}%"></div>
+                    </div>
+                </div>
+                <div class="save-slot-stats">
+                    <span>❤️ ${hp}/${maxHp}</span>
+                    <span>📊 GPA ${gpa}</span>
+                    <span>💰 ${money}</span>
+                    <span>🏆 遗物 ${relics}</span>
+                </div>
+            `;
+            slot.onclick = (e) => {
+                if (e.target.classList.contains('save-slot-delete')) {
+                    deleteSlot(i);
+                    return;
+                }
+                if (mode === 'save') {
+                    if (confirm(`确定将当前进度写到第 ${i + 1} 张假条吗？\n（会覆盖原假条）`)) {
+                        saveToSlot(i);
+                        showSaveSlotsModal('save');
+                    }
+                } else {
+                    loadFromSlot(i);
+                }
+            };
+        } else {
+            slot.innerHTML = `<div>第 ${i + 1} 张假条 — 空白</div>`;
+            if (mode === 'save') {
+                slot.onclick = () => {
+                    saveToSlot(i);
+                    showSaveSlotsModal('save');
+                };
+            } else {
+                slot.style.cursor = 'default';
+            }
+        }
+        list.appendChild(slot);
+    }
+    modal.classList.remove('hidden');
+}
+
+function closeAllModals() {
+    document.getElementById('save-slots-modal').classList.add('hidden');
+    document.getElementById('settings-modal').classList.add('hidden');
 }

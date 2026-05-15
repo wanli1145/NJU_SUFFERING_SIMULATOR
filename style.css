@@ -1681,7 +1681,7 @@ body {
 }
 
 .demo-watermark::after {
-    content: 'v1.3 测试版';
+    content: 'v1.4 测试版';
     font-size: 9px;
     color: rgba(245, 87, 108, 0.5);
     letter-spacing: 1px;
@@ -2174,4 +2174,169 @@ body {
     user-select: none;
     z-index: 5;
     letter-spacing: 1px;
+}
+
+
+/* 设置按钮 */
+.btn-settings {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ddd;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-settings:hover {
+    background: rgba(102, 126, 234, 0.3);
+    transform: rotate(60deg);
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+/* 设置弹窗 */
+.settings-modal-content {
+    min-width: 360px;
+}
+
+.settings-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.settings-buttons button {
+    width: 100%;
+}
+
+/* 假条存档槽 */
+.save-slots-content {
+    min-width: 480px;
+    max-width: 580px;
+}
+
+.save-slots-hint {
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 18px;
+}
+
+.save-slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.save-slot {
+    background: linear-gradient(135deg, rgba(245, 230, 200, 0.06), rgba(245, 230, 200, 0.02));
+    border: 1px solid rgba(245, 230, 200, 0.2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    text-align: left;
+}
+
+.save-slot:hover {
+    border-color: rgba(245, 87, 108, 0.5);
+    background: linear-gradient(135deg, rgba(245, 87, 108, 0.08), rgba(245, 87, 108, 0.02));
+    transform: translateX(4px);
+}
+
+.save-slot.empty {
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #666;
+    text-align: center;
+    padding: 24px 20px;
+    font-style: italic;
+}
+
+.save-slot.empty:hover {
+    border-color: rgba(102, 126, 234, 0.4);
+    color: #aaa;
+    background: rgba(102, 126, 234, 0.04);
+}
+
+.save-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.save-slot-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #f5a623;
+}
+
+.save-slot-time {
+    font-size: 11px;
+    color: #888;
+}
+
+.save-slot-progress {
+    margin-bottom: 8px;
+}
+
+.save-slot-week {
+    font-size: 14px;
+    color: #ddd;
+    margin-bottom: 6px;
+}
+
+.save-slot-progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.save-slot-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f5576c, #f093fb);
+    transition: width 0.3s;
+}
+
+.save-slot-stats {
+    display: flex;
+    gap: 14px;
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 8px;
+}
+
+.save-slot-delete {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.2s;
+    z-index: 2;
+}
+
+.save-slot-delete:hover {
+    background: rgba(231, 76, 60, 0.5);
+    color: white;
 }
