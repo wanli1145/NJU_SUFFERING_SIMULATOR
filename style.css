@@ -527,6 +527,11 @@ body {
     color: #c850ff;
 }
 
+.owned-relic-icon.cursed {
+    border-color: rgba(231, 76, 60, 0.4);
+    color: #e74c3c;
+}
+
 .owned-relic-icon.item {
     border-color: rgba(46, 204, 113, 0.4);
     color: #2ecc71;
@@ -1318,8 +1323,17 @@ body {
     background: rgba(200, 0, 255, 0.05);
 }
 
+.relic-item.cursed {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(231, 76, 60, 0.05);
+}
+
 .relic-item.legendary:hover {
     border-color: rgba(200, 0, 255, 0.8);
+}
+
+.relic-item.cursed:hover {
+    border-color: rgba(231, 76, 60, 0.8);
 }
 
 .relic-name {
@@ -1331,6 +1345,10 @@ body {
 
 .relic-item.legendary .relic-name {
     color: #c850ff;
+}
+
+.relic-item.cursed .relic-name {
+    color: #e74c3c;
 }
 
 .relic-effect {
@@ -1681,7 +1699,7 @@ body {
 }
 
 .demo-watermark::after {
-    content: 'v1.4 测试版';
+    content: 'v1.5 测试版';
     font-size: 9px;
     color: rgba(245, 87, 108, 0.5);
     letter-spacing: 1px;
@@ -1837,6 +1855,13 @@ body {
 .enemies-area.drop-zone-active .enemy-card {
     box-shadow: 0 0 25px rgba(245, 87, 108, 0.35);
     transform: translateY(-3px);
+}
+
+.enemy-card.targeted {
+    border-color: #f5576c !important;
+    box-shadow: 0 0 40px rgba(245, 87, 108, 0.7), 0 0 0 3px rgba(245,87,108,0.4) !important;
+    transform: translateY(-8px) scale(1.05) !important;
+    background: rgba(245, 87, 108, 0.15) !important;
 }
 
 /* 拖动时手牌取消默认旋转 */

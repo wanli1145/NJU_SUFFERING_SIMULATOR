@@ -35,8 +35,8 @@ const allCards = [
     {id:"so6", name:"我需要朋导！", cost:1, type:"social", damage:0, defense:0, gpa:1, effect:"addStudyCard0Cost", desc:"随机学业牌加入手牌(本回合0耗)。"},
     {id:"so7", name:"社团团建", cost:2, type:"social", damage:0, defense:0, gpa:-2, effect:"allCards+3permanent", desc:"所有手牌伤害/防御+3(本战斗)。"},
     // ===== 诅咒牌 =====
-    {id:"c1", name:"过敏性鼻炎", cost:-1, type:"curse", damage:0, defense:0, gpa:0, effect:"retain,firstCardCost+1", desc:"[保留]每回合第一张牌消耗+1。"},
-    {id:"c2", name:"帝王蟹", cost:-1, type:"curse", damage:0, defense:0, gpa:0, effect:"every2TurnsEnergy-1", desc:"[状态]每2回合精力-1。"},
+    {id:"c1", name:"过敏性鼻炎", cost:-1, type:"curse", damage:0, defense:0, gpa:0, effect:"retain,firstCardCost+1Conditional", desc:"[保留]在手中时，每3回合让第一张牌精力消耗+1。"},
+    {id:"c2", name:"帝王蟹（已废弃）", cost:-1, type:"curse", damage:0, defense:0, gpa:0, effect:"every2TurnsEnergy-1", desc:"[已废弃]此卡牌不应出现。"},
     {id:"c3", name:"昏昏欲睡", cost:-1, type:"curse", damage:0, defense:0, gpa:0, effect:"occupyHandSlot", desc:"占据手牌位，无任何作用。"},
     {id:"c4", name:"焦虑", cost:1, type:"curse", damage:0, defense:0, gpa:0, effect:"exhaust", desc:"[消耗]打出后移除。无正面效果。"}
 ];
@@ -52,29 +52,29 @@ const initialDeck = [
 const enemies = {
     ddl: {
         name: "DDL",
-        hp: 45,
+        hp: 60,
         isElite: false,
         isBoss: false,
         reward: {money: 50, cardChoice: 1},
         pattern: [
-            {turn:1, intent:"还有3天", damage:4, effect:"addAnxietyToDraw1", desc:"造成4伤害。抽牌堆+1焦虑。"},
-            {turn:2, intent:"还有2天", damage:0, defense:10, effect:"addAnxietyToDiscard2", desc:"获得10效率。弃牌堆+2焦虑。"},
-            {turn:3, intent:"明天交！", damage:12, effect:"addAnxietyToHand1", desc:"造成12伤害。手牌+1焦虑。"},
-            {turn:4, intent:"死线降临", damage:18, effect:"gpa-0.3", desc:"造成18伤害，GPA-0.3。"},
+            {turn:1, intent:"还有3天", damage:6, effect:"addAnxietyToDraw1", desc:"造成6伤害。抽牌堆+1焦虑。"},
+            {turn:2, intent:"还有2天", damage:0, defense:12, effect:"addAnxietyToDiscard2", desc:"获得12效率。弃牌堆+2焦虑。"},
+            {turn:3, intent:"明天交！", damage:14, effect:"addAnxietyToHand1", desc:"造成14伤害。手牌+1焦虑。"},
+            {turn:4, intent:"死线降临", damage:20, effect:"gpa-0.3", desc:"造成20伤害，GPA-0.3。"},
             {turn:5, intent:"延期/补交", damage:0, effect:"loop", desc:"不行动。重新循环。"}
         ]
     },
     teacher: {
         name: "点名的老师",
-        hp: 35,
+        hp: 50,
         isElite: false,
         isBoss: false,
         reward: {money: 50, cardChoice: 1},
         pattern: [
-            {turn:1, intent:"后排玩手机的收起来！", damage:6, effect:"banFunNextTurn", desc:"造成6伤害。下回合禁用娱乐牌。"},
-            {turn:2, intent:"不要交头接耳！", damage:0, defense:10, effect:"banSocialNextTurn", desc:"获得10效率。下回合禁用社交牌。"},
-            {turn:3, intent:"这道题谁来做？", damage:14, desc:"造成14伤害。"},
-            {turn:4, intent:"纪律太差了，全体自习！", damage:4, effect:"banFunAndSocialNextTurn", desc:"造成4伤害。下回合禁用娱乐和社交牌。"},
+            {turn:1, intent:"后排玩手机的收起来！", damage:8, effect:"banFunNextTurn", desc:"造成8伤害。下回合禁用娱乐牌。"},
+            {turn:2, intent:"不要交头接耳！", damage:0, defense:12, effect:"banSocialNextTurn", desc:"获得12效率。下回合禁用社交牌。"},
+            {turn:3, intent:"这道题谁来做？", damage:16, desc:"造成16伤害。"},
+            {turn:4, intent:"纪律太差了，全体自习！", damage:6, effect:"banFunAndSocialNextTurn", desc:"造成6伤害。下回合禁用娱乐和社交牌。"},
             {turn:5, intent:"喝口水润润嗓", damage:0, effect:"loop", desc:"休息。重新循环。"}
         ]
     },
@@ -97,26 +97,26 @@ const enemies = {
     },
     finalWeek: {
         name: "期！末！周！",
-        hp: 160,
+        hp: 130,
         isElite: false,
         isBoss: true,
         reward: {money: 100, gpa: 0.5},
         pattern: [
-            {turn:1, intent:"发布考试安排表", damage:0, defense:10, effect:"summonMiniDDL2", desc:"召唤2只小DDL。获得10效率。"},
-            {turn:2, intent:"考前划重点", damage:10, effect:"addAnxiety2", desc:"造成10伤害。+2焦虑到抽牌堆。"},
-            {turn:3, intent:"图书馆抢座失败", damage:15, effect:"playerMaxEnergy-1NextTurn", desc:"造成15伤害。下回合精力上限-1。"},
-            {turn:4, intent:"通宵的后遗症", damage:0, defense:20, desc:"不行动。获得20点效率(双倍护盾)。"},
+            {turn:1, intent:"发布考试安排表", damage:0, defense:8, effect:"summonMiniDDL2", desc:"召唤2只小DDL。获得8效率。"},
+            {turn:2, intent:"考前划重点", damage:8, effect:"addAnxiety2", desc:"造成8伤害。+2焦虑到抽牌堆。"},
+            {turn:3, intent:"图书馆抢座失败", damage:12, effect:"playerMaxEnergy-1NextTurn", desc:"造成12伤害。下回合精力上限-1。"},
+            {turn:4, intent:"通宵的后遗症", damage:0, defense:15, desc:"不行动。获得15点效率。"},
             {turn:5, intent:"循环重置", damage:0, effect:"loop", desc:"重新循环。"}
         ]
     },
     miniDDL: {
         name: "夺命小DDL",
-        hp: 25,
+        hp: 18,
         isSummon: true,
         pattern: [
             {turn:1, intent:"倒数3", damage:0, desc:"无动作。"},
-            {turn:2, intent:"倒数2", damage:5, desc:"造成5伤害。"},
-            {turn:3, intent:"死线爆炸", damage:15, effect:"gpa-0.1,selfDestruct", desc:"造成15伤害，GPA-0.1，自毁。"}
+            {turn:2, intent:"倒数2", damage:4, desc:"造成4伤害。"},
+            {turn:3, intent:"死线爆炸", damage:10, effect:"gpa-0.1,selfDestruct", desc:"造成10伤害，GPA-0.1，自毁。"}
         ]
     }
 };
@@ -160,7 +160,7 @@ const events = {
             },
             {text:"前往广州路「第二食堂」", subtitle:"（50生活费）", cost:50,
                 result:"听着若有若无的「Ba-da-ba-ba-ba」提示音，你感受到了工业流水线带来的极致稳定。M门的庇护让你瞬间回血！",
-                effect:"fullHeal,randomRelic", effectDesc:"心态回满，获得1件随机普通遗物。"}
+                effect:"fullHeal,randomRelic", effectDesc:"心态回满，获得1件随机生活用品。"}
         ]
     },
     supermarket: {
@@ -222,7 +222,7 @@ const randomEvents = {
         choices: [
             {text:"陷入舆论的漩涡", subtitle:"",
                 result:"无论你怎么辩解，声音都瞬间被流量淹没，让你心力交瘁。",
-                effect:"addCrabCurse", effectDesc:"强制获得诅咒牌「帝王蟹」（每两回合减1精力）。"}
+                effect:"addCrabRelic", effectDesc:"获得负面生活用品「帝王蟹」（每3回合精力-1）。"}
         ]
     },
     mysteryMan: {
@@ -248,7 +248,7 @@ const randomEvents = {
         choices: [
             {text:"苦，但能熬。", subtitle:"",
                 result:"他欣慰地点点头：「嚼得菜根，做得大事。去吧，孩子。」",
-                effect:"addCaigenRelic", effectDesc:"获得传奇遗物【嚼过的菜根】（半血以下化身战神）。"},
+                effect:"addCaigenRelic", effectDesc:"获得传奇生活用品【嚼过的菜根】（半血以下化身战神）。"},
             {text:"太特么苦了，我想回家。", subtitle:"",
                 result:"他叹了口气，往你手里塞了一把零钱：「去买点好吃的吧，别难为自己。」",
                 effect:"money+50,gpa-0.5", effectDesc:"获得50生活费，但隐藏GPA-0.5。"}
@@ -269,7 +269,9 @@ const relics = {
     thermos: {name:"保温杯", type:"common", effect:"战斗开始获得6点效率。", flavor:"里面装的不是水，是我的生命。"},
     highlighter: {name:"四色荧光笔", type:"common", effect:"每场首张学业牌伤害+50%。", flavor:"划重点是有用的。"},
     headphones: {name:"降噪耳机", type:"common", effect:"战斗第一回合多抽1张牌。", flavor:"世界的喧嚣与我无关。"},
-    redbull: {name:"瑞星？", type:"common", effect:"精力上限+1，心态上限-10。", flavor:"烧血？"}
+    redbull: {name:"瑞星？", type:"common", effect:"精力上限+1，心态上限-10。", flavor:"烧血？"},
+    // 负面
+    crab: {name:"帝王蟹", type:"cursed", effect:"每场战斗第3、6、9...回合开始时，本回合精力-1。", flavor:"舆论的漩涡阴魂不散。"}
 };
 
 // 消耗道具

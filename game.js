@@ -189,8 +189,9 @@ function updateRelicBar() {
         const relic = relics[key];
         if (!relic) return;
         const span = document.createElement('span');
-        span.className = `owned-relic-icon ${relic.type === 'legendary' ? 'legendary' : ''}`;
-        span.textContent = (relic.type === 'legendary' ? '⭐' : '🔹') + relic.name;
+        span.className = `owned-relic-icon ${relic.type}`;
+        const icon = relic.type === 'legendary' ? '⭐' : (relic.type === 'cursed' ? '💀' : '🔹');
+        span.textContent = icon + relic.name;
         span.setAttribute('data-tooltip', relic.effect);
         bar.appendChild(span);
     });
@@ -605,7 +606,8 @@ function applyEventEffect(effectStr) {
         else if (eff === 'addSick') game.statuses.sick = true;
         else if (eff === 'addSleepy') game.deck.push('c3');
         else if (eff === 'addRhinitis') game.deck.push('c1');
-        else if (eff === 'addCrabCurse') game.deck.push('c2');
+        else if (eff === 'addCrabCurse') game.relicsOwned.push('crab');
+        else if (eff === 'addCrabRelic') game.relicsOwned.push('crab');
         else if (eff === 'addNobelRelic') game.relicsOwned.push('nobel');
         else if (eff === 'addPhilosophyRelic') game.relicsOwned.push('philosophy');
         else if (eff === 'addCaigenRelic') game.relicsOwned.push('caigen');
@@ -819,8 +821,8 @@ function startPlayerTurn() {
     }
     let energy = game.battle.maxEnergy + game.statuses.nextTurnEnergyMod;
     game.statuses.nextTurnEnergyMod = 0;
-    // 帝王蟹诅咒
-    if (game.deck.includes('c2') && game.battle.turn % 2 === 0) {
+    // 帝王蟹（生活用品）：每3回合精力-1
+    if (game.relicsOwned.includes('crab') && game.battle.turn > 0 && game.battle.turn % 3 === 0) {
         energy--;
     }
     const oldEnergy = game.battle.energy;
@@ -1106,9 +1108,10 @@ function attachDragHandler(cardEl, handIdx) {
         if (hasMoved) {
             cardEl.style.setProperty('transform', `translate(${dx}px, ${dy}px) rotate(0deg) scale(1.1)`, 'important');
             cardEl.style.boxShadow = '0 20px 50px rgba(102,126,234,0.5)';
-            // 拖动开始即视为准备出牌：高亮敌人区
+            // 检测当前指针下的敌人
             const enemyArea = document.getElementById('enemies-area');
             enemyArea.classList.add('drop-zone-active');
+            highlightEnemyAtPoint(e.clientX, e.clientY);
             cardEl.style.opacity = '1';
         }
     };
@@ -1120,28 +1123,57 @@ function attachDragHandler(cardEl, handIdx) {
         document.removeEventListener('pointerup', onPointerUp);
         const enemyArea = document.getElementById('enemies-area');
         enemyArea.classList.remove('drop-zone-active');
+        clearEnemyHighlights();
 
-        // 任何释放（移动或点击）都算出牌；卡牌停在松手位置
+        // 检测松手位置下的敌人作为目标
+        const targetIdx = findEnemyAtPoint(e.clientX, e.clientY);
+
         cardEl.classList.remove('is-dragging');
         cardEl.style.transition = 'none';
-        // 不重置 transform：保留拖动结束位置
-        playCard(handIdx);
+        playCard(handIdx, targetIdx);
     };
 
     cardEl.addEventListener('pointerdown', onPointerDown);
 }
 
+function findEnemyAtPoint(x, y) {
+    if (!game.battle) return -1;
+    const enemyEls = document.querySelectorAll('#enemies-area .enemy-card');
+    for (let i = 0; i < enemyEls.length; i++) {
+        const rect = enemyEls[i].getBoundingClientRect();
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+            return parseInt(enemyEls[i].dataset.idx);
+        }
+    }
+    return -1;
+}
+
+function highlightEnemyAtPoint(x, y) {
+    const enemyEls = document.querySelectorAll('#enemies-area .enemy-card');
+    enemyEls.forEach(el => el.classList.remove('targeted'));
+    const targetIdx = findEnemyAtPoint(x, y);
+    if (targetIdx >= 0) {
+        const el = document.querySelector(`#enemies-area .enemy-card[data-idx="${targetIdx}"]`);
+        if (el) el.classList.add('targeted');
+    }
+}
+
+function clearEnemyHighlights() {
+    const enemyEls = document.querySelectorAll('#enemies-area .enemy-card');
+    enemyEls.forEach(el => el.classList.remove('targeted'));
+}
+
 
 // ===== 打牌逻辑 =====
-function playCard(handIdx) {
+function playCard(handIdx, targetIdx) {
     const cardId = game.battle.hand[handIdx];
     const card = getCardData(cardId);
     if (!card || !canPlayCard(card)) return;
 
-    // 立即扣费视觉反馈：先计算费用并扣除，让玩家立刻看到精力变化
+    // 立即扣费视觉反馈
     let cost = card.cost;
     if (card.type === 'social' && game.statuses.socialFreeCount > 0) cost = 0;
-    if (game.battle.cardsPlayedThisTurn === 0 && game.battle.hand.includes('c1')) cost++;
+    if (game.battle.cardsPlayedThisTurn === 0 && game.battle.hand.includes('c1') && game.battle.turn % 3 === 0) cost++;
     const energyEl = document.getElementById('battle-energy');
     if (energyEl && cost > 0) {
         const currentMaxText = `/${game.battle.maxEnergy}`;
@@ -1161,10 +1193,10 @@ function playCard(handIdx) {
         cardEl.style.pointerEvents = 'none';
     }
 
-    setTimeout(() => { executePlayCard(handIdx, cardId, card); }, 280);
+    setTimeout(() => { executePlayCard(handIdx, cardId, card, targetIdx); }, 280);
 }
 
-function executePlayCard(handIdx, cardId, card) {
+function executePlayCard(handIdx, cardId, card, targetIdx) {
 
     // 扣精力
     let cost = card.cost;
@@ -1182,8 +1214,8 @@ function executePlayCard(handIdx, cardId, card) {
         cost = Math.max(0, cost - 1);
         game.statuses._nobelUsedThisCycle = true;
     }
-    // 过敏性鼻炎：第一张牌+1
-    if (game.battle.cardsPlayedThisTurn === 0 && game.battle.hand.includes('c1')) {
+    // 过敏性鼻炎：在手中时，每3回合让第一张牌精力消耗+1
+    if (game.battle.cardsPlayedThisTurn === 0 && game.battle.hand.includes('c1') && game.battle.turn % 3 === 0) {
         cost++;
     }
     if (cost > game.battle.energy && card.id !== 'c4') return;
@@ -1243,7 +1275,13 @@ function executePlayCard(handIdx, cardId, card) {
         if (isAoe) {
             game.battle.enemies.forEach(e => { if (e.hp > 0) dealDamageToEnemy(e, damage); });
         } else {
-            const target = game.battle.enemies.find(e => e.hp > 0);
+            // 优先攻击拖动指定的目标
+            let target = null;
+            if (typeof targetIdx === 'number' && targetIdx >= 0 && game.battle.enemies[targetIdx] && game.battle.enemies[targetIdx].hp > 0) {
+                target = game.battle.enemies[targetIdx];
+            } else {
+                target = game.battle.enemies.find(e => e.hp > 0);
+            }
             if (target) dealDamageToEnemy(target, damage);
         }
     }
@@ -1826,17 +1864,18 @@ function showRelicView() {
     const area = document.getElementById('relic-view-area');
     area.innerHTML = '';
     if (game.relicsOwned.length === 0 && game.itemsOwned.length === 0) {
-        area.innerHTML = '<p style="color:#888">暂无遗物或道具</p>';
+        area.innerHTML = '<p style="color:#888">暂无生活用品或道具</p>';
         return;
     }
-    // 遗物
+    // 生活用品
     game.relicsOwned.forEach(key => {
         const relic = relics[key];
         if (!relic) return;
         const div = document.createElement('div');
-        div.className = `relic-item ${relic.type === 'legendary' ? 'legendary' : ''}`;
+        div.className = `relic-item ${relic.type}`;
+        const icon = relic.type === 'legendary' ? '⭐' : (relic.type === 'cursed' ? '💀' : '🔹');
         div.innerHTML = `
-            <div class="relic-name">${relic.type === 'legendary' ? '⭐ ' : '🔹 '}${relic.name}</div>
+            <div class="relic-name">${icon} ${relic.name}</div>
             <div class="relic-effect">${relic.effect}</div>
             <div class="relic-flavor">${relic.flavor || ''}</div>
         `;
@@ -1912,9 +1951,11 @@ setupDebugPanel();
 function setupDebugPanel() {
     const panel = document.getElementById('debug-panel');
     if (!panel) return;
-    // 按 F2 / Ctrl+D 开关
+    // 按 Shift+D 开关（Mac 友好）
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'F2' || (e.ctrlKey && (e.key === 'd' || e.key === 'D'))) {
+        // 不在输入框中时才响应
+        const inInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+        if (!inInput && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
             e.preventDefault();
             panel.classList.toggle('hidden');
             if (!panel.classList.contains('hidden')) refreshDebugPanel();
@@ -1953,12 +1994,13 @@ function setupDebugPanel() {
         const r = relics[key];
         const btn = document.createElement('button');
         btn.className = 'debug-btn';
-        btn.textContent = (r.type === 'legendary' ? '⭐' : '🔹') + r.name;
+        const icon = r.type === 'legendary' ? '⭐' : (r.type === 'cursed' ? '💀' : '🔹');
+        btn.textContent = icon + r.name;
         btn.onclick = () => {
             if (!game.relicsOwned.includes(key)) game.relicsOwned.push(key);
             updateAllStats();
             renderBattle();
-            console.log(`[DEBUG] 添加遗物: ${r.name}`);
+            console.log(`[DEBUG] 添加生活用品: ${r.name}`);
         };
         relicsList.appendChild(btn);
     });
@@ -2290,7 +2332,7 @@ function showSaveSlotsModal(mode) {
                     <span>❤️ ${hp}/${maxHp}</span>
                     <span>📊 GPA ${gpa}</span>
                     <span>💰 ${money}</span>
-                    <span>🏆 遗物 ${relics}</span>
+                    <span>🏆 用品 ${relics}</span>
                 </div>
             `;
             slot.onclick = (e) => {
