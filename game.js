@@ -1106,14 +1106,10 @@ function attachDragHandler(cardEl, handIdx) {
         if (hasMoved) {
             cardEl.style.setProperty('transform', `translate(${dx}px, ${dy}px) rotate(0deg) scale(1.1)`, 'important');
             cardEl.style.boxShadow = '0 20px 50px rgba(102,126,234,0.5)';
+            // 拖动开始即视为准备出牌：高亮敌人区
             const enemyArea = document.getElementById('enemies-area');
-            const inDropZone = e.clientY < (originalRect.top - 50);
-            cardEl.style.opacity = inDropZone ? '1' : '0.85';
-            if (inDropZone) {
-                enemyArea.classList.add('drop-zone-active');
-            } else {
-                enemyArea.classList.remove('drop-zone-active');
-            }
+            enemyArea.classList.add('drop-zone-active');
+            cardEl.style.opacity = '1';
         }
     };
 
@@ -1125,9 +1121,8 @@ function attachDragHandler(cardEl, handIdx) {
         const enemyArea = document.getElementById('enemies-area');
         enemyArea.classList.remove('drop-zone-active');
 
-        const draggedFarEnough = hasMoved && (e.clientY < originalRect.top - 50);
-
-        if (draggedFarEnough) {
+        // 改：只要有效拖动（移动距离>阈值），无论方向都判定为出牌
+        if (hasMoved) {
             cardEl.classList.remove('is-dragging');
             cardEl.style.removeProperty('transform');
             cardEl.style.transition = '';
@@ -1136,15 +1131,14 @@ function attachDragHandler(cardEl, handIdx) {
             cardEl.style.zIndex = '';
             playCard(handIdx);
         } else {
-            cardEl.style.transition = 'all 0.25s ease-out';
+            // 没移动（基本是点击）→ 直接也视为出牌
+            cardEl.classList.remove('is-dragging');
             cardEl.style.removeProperty('transform');
+            cardEl.style.transition = '';
             cardEl.style.boxShadow = '';
             cardEl.style.opacity = '';
-            setTimeout(() => {
-                cardEl.classList.remove('is-dragging');
-                cardEl.style.zIndex = '';
-                cardEl.style.transition = '';
-            }, 250);
+            cardEl.style.zIndex = '';
+            playCard(handIdx);
         }
     };
 
@@ -1899,6 +1893,179 @@ document.getElementById('btn-item-modal-close').onclick = () => document.getElem
 document.getElementById('btn-pile-modal-close').onclick = () => document.getElementById('pile-modal').classList.add('hidden');
 document.getElementById('draw-pile-visual').onclick = () => showPileModal('draw');
 document.getElementById('discard-pile-visual').onclick = () => showPileModal('discard');
+
+// ===== 测试者通道 =====
+setupDebugPanel();
+
+function setupDebugPanel() {
+    const panel = document.getElementById('debug-panel');
+    if (!panel) return;
+    // 按 ~ 键开关
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '`' || e.key === '~') {
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) refreshDebugPanel();
+        }
+        if (e.key === 'Escape' && !panel.classList.contains('hidden')) {
+            panel.classList.add('hidden');
+        }
+    });
+    document.getElementById('btn-debug-close').onclick = () => panel.classList.add('hidden');
+
+    // 周次按钮
+    const weekList = document.getElementById('debug-week-list');
+    weekSchedule.forEach((w, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'debug-btn';
+        btn.textContent = `第${13 - w.week}周`;
+        btn.onclick = () => debugJumpToWeek(idx);
+        weekList.appendChild(btn);
+    });
+
+    // 事件按钮
+    const eventsList = document.getElementById('debug-events-list');
+    [...Object.keys(events), ...Object.keys(randomEvents)].forEach(key => {
+        const isRandom = !!randomEvents[key];
+        const evt = isRandom ? randomEvents[key] : events[key];
+        const btn = document.createElement('button');
+        btn.className = 'debug-btn';
+        btn.textContent = evt.name;
+        btn.onclick = () => debugTriggerEvent(key, isRandom);
+        eventsList.appendChild(btn);
+    });
+
+    // 遗物按钮
+    const relicsList = document.getElementById('debug-relics-list');
+    Object.keys(relics).forEach(key => {
+        const r = relics[key];
+        const btn = document.createElement('button');
+        btn.className = 'debug-btn';
+        btn.textContent = (r.type === 'legendary' ? '⭐' : '🔹') + r.name;
+        btn.onclick = () => {
+            if (!game.relicsOwned.includes(key)) game.relicsOwned.push(key);
+            updateAllStats();
+            renderBattle();
+            console.log(`[DEBUG] 添加遗物: ${r.name}`);
+        };
+        relicsList.appendChild(btn);
+    });
+
+    // 道具按钮
+    const itemsList = document.getElementById('debug-items-list');
+    Object.keys(items).forEach(key => {
+        const it = items[key];
+        const btn = document.createElement('button');
+        btn.className = 'debug-btn';
+        btn.textContent = '🧪' + it.name;
+        btn.onclick = () => {
+            game.itemsOwned.push(key);
+            updateAllStats();
+            renderBattle();
+            console.log(`[DEBUG] 添加道具: ${it.name}`);
+        };
+        itemsList.appendChild(btn);
+    });
+
+    // 通用按钮
+    panel.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        debugAction(action);
+    });
+}
+
+function refreshDebugPanel() {
+    document.getElementById('debug-hp').value = Math.round(game.player.hp);
+    document.getElementById('debug-gpa').value = game.player.gpa.toFixed(2);
+    document.getElementById('debug-money').value = game.player.money;
+    document.getElementById('debug-energy').value = game.player.maxEnergy;
+}
+
+function debugAction(action) {
+    switch (action) {
+        case 'set-hp': {
+            const v = parseFloat(document.getElementById('debug-hp').value);
+            game.player.hp = Math.min(game.player.maxHp, Math.max(0, v));
+            break;
+        }
+        case 'set-gpa': {
+            const v = parseFloat(document.getElementById('debug-gpa').value);
+            game.player.gpa = Math.min(5, Math.max(0, v));
+            break;
+        }
+        case 'set-money': {
+            game.player.money = Math.max(0, parseInt(document.getElementById('debug-money').value));
+            break;
+        }
+        case 'set-energy': {
+            game.player.maxEnergy = Math.max(0, parseInt(document.getElementById('debug-energy').value));
+            if (game.battle) game.battle.maxEnergy = game.player.maxEnergy;
+            break;
+        }
+        case 'battle-ddl': debugStartBattle('ddl'); return;
+        case 'battle-teacher': debugStartBattle('teacher'); return;
+        case 'battle-run24': debugStartBattle('run24'); return;
+        case 'battle-finalWeek': debugStartBattle('finalWeek'); return;
+        case 'add-all-cards':
+            allCards.filter(c => c.type !== 'curse').forEach(c => game.deck.push(c.id));
+            break;
+        case 'clear-curses':
+            game.deck = game.deck.filter(id => {
+                const c = getCardData(id);
+                return !c || c.type !== 'curse';
+            });
+            break;
+        case 'reset-deck':
+            game.deck = [...initialDeck];
+            break;
+        case 'ending-S': game.player.gpa = 4.9; showEnding(); return;
+        case 'ending-A': game.player.gpa = 4.6; showEnding(); return;
+        case 'ending-B': game.player.gpa = 3.8; showEnding(); return;
+        case 'ending-C': game.player.gpa = 2.5; showEnding(); return;
+        case 'ending-F-hp': game.player.hp = 0; showEnding(); return;
+        case 'ending-F-gpa': game.player.gpa = 1.5; showEnding(); return;
+        case 'full-heal':
+            game.player.hp = game.player.maxHp;
+            break;
+        case 'reset-warnings':
+            game.gpaWarningTriggered = { level1:false, level2:false, expelled:false };
+            break;
+        case 'clear-save':
+            localStorage.removeItem('nju_suffering_save');
+            alert('存档已清除');
+            return;
+        case 'back-to-map':
+            game.battle = null;
+            game.pendingAction = null;
+            showScreen('map-screen');
+            showCurrentWeek();
+            return;
+    }
+    updateAllStats();
+    if (game.battle) renderBattle();
+    refreshDebugPanel();
+}
+
+function debugJumpToWeek(idx) {
+    game.currentWeekIndex = idx;
+    game.battle = null;
+    game.pendingAction = null;
+    document.getElementById('debug-panel').classList.add('hidden');
+    showScreen('map-screen');
+    showCurrentWeek();
+    console.log(`[DEBUG] 跳到第${13 - weekSchedule[idx].week}周`);
+}
+
+function debugStartBattle(enemyKey) {
+    document.getElementById('debug-panel').classList.add('hidden');
+    startBattle(enemyKey);
+}
+
+function debugTriggerEvent(key, isRandom) {
+    document.getElementById('debug-panel').classList.add('hidden');
+    showEvent(key, isRandom);
+}
 
 // ===== 战斗中道具与牌堆查看 =====
 function showItemModal() {

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>南大受苦模拟器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -280,6 +283,103 @@
                 <button id="btn-cancel-remove" class="btn-secondary">取消</button>
             </div>
         </div>
+
+        <!-- 测试者通道（按 ~ 键打开）-->
+        <div id="debug-panel" class="debug-panel hidden">
+            <div class="debug-header">
+                <h3>🛠 测试者通道</h3>
+                <button id="btn-debug-close" class="debug-close">×</button>
+            </div>
+            <div class="debug-content">
+                <div class="debug-section">
+                    <h4>调整属性</h4>
+                    <div class="debug-row">
+                        <label>心态</label>
+                        <input type="number" id="debug-hp" value="100">
+                        <button class="debug-btn" data-action="set-hp">设置</button>
+                    </div>
+                    <div class="debug-row">
+                        <label>GPA</label>
+                        <input type="number" id="debug-gpa" step="0.1" value="3.5">
+                        <button class="debug-btn" data-action="set-gpa">设置</button>
+                    </div>
+                    <div class="debug-row">
+                        <label>生活费</label>
+                        <input type="number" id="debug-money" value="200">
+                        <button class="debug-btn" data-action="set-money">设置</button>
+                    </div>
+                    <div class="debug-row">
+                        <label>精力上限</label>
+                        <input type="number" id="debug-energy" value="3">
+                        <button class="debug-btn" data-action="set-energy">设置</button>
+                    </div>
+                </div>
+
+                <div class="debug-section">
+                    <h4>跳到指定周</h4>
+                    <div class="debug-week-grid" id="debug-week-list"></div>
+                </div>
+
+                <div class="debug-section">
+                    <h4>直接触发战斗</h4>
+                    <div class="debug-btn-grid">
+                        <button class="debug-btn" data-action="battle-ddl">DDL</button>
+                        <button class="debug-btn" data-action="battle-teacher">点名老师</button>
+                        <button class="debug-btn" data-action="battle-run24">2.4km体测</button>
+                        <button class="debug-btn" data-action="battle-finalWeek">期末周BOSS</button>
+                    </div>
+                </div>
+
+                <div class="debug-section">
+                    <h4>触发事件</h4>
+                    <div class="debug-btn-grid" id="debug-events-list"></div>
+                </div>
+
+                <div class="debug-section">
+                    <h4>添加遗物</h4>
+                    <div class="debug-btn-grid" id="debug-relics-list"></div>
+                </div>
+
+                <div class="debug-section">
+                    <h4>添加道具</h4>
+                    <div class="debug-btn-grid" id="debug-items-list"></div>
+                </div>
+
+                <div class="debug-section">
+                    <h4>牌组操作</h4>
+                    <div class="debug-btn-grid">
+                        <button class="debug-btn" data-action="add-all-cards">所有非诅咒牌+1</button>
+                        <button class="debug-btn" data-action="clear-curses">移除所有诅咒</button>
+                        <button class="debug-btn" data-action="reset-deck">重置初始牌组</button>
+                    </div>
+                </div>
+
+                <div class="debug-section">
+                    <h4>结局测试</h4>
+                    <div class="debug-btn-grid">
+                        <button class="debug-btn" data-action="ending-S">S 结局</button>
+                        <button class="debug-btn" data-action="ending-A">A 结局</button>
+                        <button class="debug-btn" data-action="ending-B">B 结局</button>
+                        <button class="debug-btn" data-action="ending-C">C 结局</button>
+                        <button class="debug-btn" data-action="ending-F-hp">F (心态崩)</button>
+                        <button class="debug-btn" data-action="ending-F-gpa">F (退学)</button>
+                    </div>
+                </div>
+
+                <div class="debug-section">
+                    <h4>其它</h4>
+                    <div class="debug-btn-grid">
+                        <button class="debug-btn" data-action="full-heal">满血</button>
+                        <button class="debug-btn" data-action="reset-warnings">重置预警</button>
+                        <button class="debug-btn" data-action="clear-save">清除存档</button>
+                        <button class="debug-btn" data-action="back-to-map">回到地图</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 测试者通道触发提示 -->
+        <div id="debug-hint" class="debug-hint">按 ~ 键打开测试者通道</div>
     </div>
 
     <script src="data.js"></script>
