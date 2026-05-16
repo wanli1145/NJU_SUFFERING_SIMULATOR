@@ -224,7 +224,7 @@ function drawGpaOnCanvas(canvas) {
     const w = canvas.width, h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // 兼容新旧格式：可能是 [3.5] 或 [{gpa, label, weekIdx}]
+    // 兼容新旧格式
     const rawHistory = (game.gpaHistory && game.gpaHistory.length > 0) ? game.gpaHistory : [{ gpa: game.player.gpa, label: '当前' }];
     const data = rawHistory.map(p => typeof p === 'number' ? { gpa: p, label: '' } : p);
 
@@ -233,16 +233,16 @@ function drawGpaOnCanvas(canvas) {
     const plotW = w - padL - padR;
     const plotH = h - padT - padB;
 
-    // 背景
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    // 白色背景
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.fillRect(0, 0, w, h);
 
     // 警戒线 + 标签
     const thresholds = [
-        { val: 4.8, color: 'rgba(200,0,255,0.4)', textColor: '#c850ff', label: '4.8' },
-        { val: 4.0, color: 'rgba(255,255,255,0.15)', textColor: '#888', label: '4.0' },
-        { val: 3.0, color: 'rgba(255,165,0,0.35)', textColor: '#ffa502', label: '3.0' },
-        { val: 2.0, color: 'rgba(231,76,60,0.55)', textColor: '#e74c3c', label: '2.0' }
+        { val: 4.8, color: 'rgba(142, 68, 173, 0.4)', textColor: '#8e44ad', label: '4.8' },
+        { val: 4.0, color: 'rgba(0, 0, 0, 0.1)', textColor: '#999', label: '4.0' },
+        { val: 3.0, color: 'rgba(230, 126, 34, 0.4)', textColor: '#e67e22', label: '3.0' },
+        { val: 2.0, color: 'rgba(231, 76, 60, 0.5)', textColor: '#e74c3c', label: '2.0' }
     ];
     thresholds.forEach(t => {
         const y = padT + plotH - ((t.val - minGpa) / (maxGpa - minGpa)) * plotH;
@@ -264,15 +264,15 @@ function drawGpaOnCanvas(canvas) {
         const gpa = data[0].gpa;
         const x = padL + plotW / 2;
         const y = padT + plotH - ((gpa - minGpa) / (maxGpa - minGpa)) * plotH;
-        ctx.fillStyle = 'rgba(245,87,108,0.25)';
+        ctx.fillStyle = 'rgba(52, 152, 219, 0.2)';
         ctx.beginPath();
         ctx.arc(x, y, 8, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#f5576c';
+        ctx.fillStyle = '#2980b9';
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = '#1a1a1a';
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(gpa.toFixed(2), x, y - 10);
@@ -281,8 +281,8 @@ function drawGpaOnCanvas(canvas) {
 
     // 渐变填充区域（折线下方）
     const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
-    grad.addColorStop(0, 'rgba(245,87,108,0.35)');
-    grad.addColorStop(1, 'rgba(245,87,108,0.0)');
+    grad.addColorStop(0, 'rgba(52, 152, 219, 0.25)');
+    grad.addColorStop(1, 'rgba(52, 152, 219, 0.02)');
     ctx.fillStyle = grad;
     ctx.beginPath();
     data.forEach((pt, i) => {
@@ -296,10 +296,8 @@ function drawGpaOnCanvas(canvas) {
     ctx.closePath();
     ctx.fill();
 
-    // 折线（带阴影）
-    ctx.shadowColor = 'rgba(245,87,108,0.5)';
-    ctx.shadowBlur = 4;
-    ctx.strokeStyle = '#f5576c';
+    // 折线主体
+    ctx.strokeStyle = '#2980b9';
     ctx.lineWidth = 2.2;
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -310,49 +308,47 @@ function drawGpaOnCanvas(canvas) {
         else ctx.lineTo(x, y);
     });
     ctx.stroke();
-    ctx.shadowBlur = 0;
 
-    // 数据点（关键点突出）
+    // 数据点
     data.forEach((pt, i) => {
         const x = padL + (i / (data.length - 1)) * plotW;
         const y = padT + plotH - ((pt.gpa - minGpa) / (maxGpa - minGpa)) * plotH;
-        const isFirst = i === 0;
         const isLast = i === data.length - 1;
         const delta = i > 0 ? Math.abs(pt.gpa - data[i - 1].gpa) : 0;
         const isSignificant = delta >= 0.1;
 
-        if (isFirst || isLast || isSignificant) {
-            if (isLast) {
-                ctx.fillStyle = 'rgba(245,87,108,0.3)';
-                ctx.beginPath();
-                ctx.arc(x, y, 9, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            // 主点
-            ctx.fillStyle = isLast ? '#ff4757' : (isSignificant ? '#ffa502' : '#f5576c');
+        if (isLast) {
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.2)';
             ctx.beginPath();
-            ctx.arc(x, y, isLast ? 4 : 3, 0, Math.PI * 2);
+            ctx.arc(x, y, 7, 0, Math.PI * 2);
             ctx.fill();
-            // 内白点
+            ctx.fillStyle = '#2980b9';
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(x, y, isLast ? 2 : 1.5, 0, Math.PI * 2);
+            ctx.arc(x, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (isSignificant) {
+            ctx.fillStyle = '#e67e22';
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
             ctx.fill();
         } else {
-            // 一般点小一点
-            ctx.fillStyle = 'rgba(245,87,108,0.6)';
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.5)';
             ctx.beginPath();
             ctx.arc(x, y, 1.5, 0, Math.PI * 2);
             ctx.fill();
         }
     });
 
-    // 当前 GPA 数值（右上）
+    // 当前 GPA 数值（右上角）
     const lastGpa = data[data.length - 1].gpa;
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#1a1a1a';
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('GPA ' + lastGpa.toFixed(2), w - padR, 12);
+    ctx.fillText('GPA ' + lastGpa.toFixed(2), w - padR, 13);
 }
 
 function updateBattleStats() {
@@ -1194,8 +1190,10 @@ function createCardElement(card, isChoice) {
     const el = document.createElement('div');
     el.className = `card type-${card.type}`;
     const costDisplay = card.cost >= 0 ? card.cost : '×';
+    const imgHtml = card.image ? `<img class="card-art" src="${card.image}" alt="">` : '';
     el.innerHTML = `
         <div class="card-cost">${costDisplay}</div>
+        ${imgHtml}
         <div class="card-name">${card.name}</div>
         <div class="card-desc">${card.desc}</div>
         <div class="card-bottom">
