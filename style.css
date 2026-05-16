@@ -816,7 +816,14 @@ body {
 }
 
 .battle-top-bar {
-    display: none; /* 隐藏旧顶栏，玩家面板改为绝对定位 */
+    background: transparent;
+    border: none;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
 }
 
 .enemies-area {
