@@ -1190,14 +1190,17 @@ function createCardElement(card, isChoice) {
     const el = document.createElement('div');
     el.className = `card type-${card.type}`;
     const costDisplay = card.cost >= 0 ? card.cost : '×';
-    const imgHtml = card.image ? `<img class="card-art" src="${card.image}" alt="">` : '';
+    // 如果有卡图，整张卡用图片做背景
+    if (card.image) {
+        el.style.backgroundImage = `url('${card.image}')`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+    }
     el.innerHTML = `
         <div class="card-cost">${costDisplay}</div>
-        ${imgHtml}
-        <div class="card-name">${card.name}</div>
-        <div class="card-desc">${card.desc}</div>
-        <div class="card-bottom">
-            <div class="card-type-tag">${getTypeName(card.type)}</div>
+        <div class="card-info-overlay">
+            <div class="card-name">${card.name}</div>
+            <div class="card-desc">${card.desc}</div>
         </div>
     `;
     return el;
