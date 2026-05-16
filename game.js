@@ -190,8 +190,12 @@ function updateRelicBar() {
         if (!relic) return;
         const span = document.createElement('span');
         span.className = `owned-relic-icon ${relic.type}`;
-        const icon = relic.type === 'legendary' ? '⭐' : (relic.type === 'cursed' ? '💀' : '🔹');
-        span.textContent = icon + relic.name;
+        if (relic.image) {
+            span.innerHTML = `<img src="${relic.image}" class="relic-bar-img" alt="${relic.name}">`;
+        } else {
+            const icon = relic.type === 'legendary' ? '⭐' : (relic.type === 'cursed' ? '💀' : '🔹');
+            span.textContent = icon + relic.name;
+        }
         span.setAttribute('data-tooltip', relic.effect);
         bar.appendChild(span);
     });
@@ -596,6 +600,15 @@ function drawGpaChart() {
 function showEvent(eventKey, isRandom) {
     const evt = isRandom ? randomEvents[eventKey] : events[eventKey];
     showScreen('event-screen');
+    // 设置事件背景图
+    const eventScreen = document.getElementById('event-screen');
+    if (evt.image) {
+        eventScreen.style.backgroundImage = `url('${evt.image}')`;
+        eventScreen.style.backgroundSize = 'cover';
+        eventScreen.style.backgroundPosition = 'center';
+    } else {
+        eventScreen.style.backgroundImage = '';
+    }
     document.getElementById('event-title').textContent = evt.name;
     document.getElementById('event-desc').textContent = evt.desc;
     document.getElementById('event-result').classList.add('hidden');
@@ -634,23 +647,34 @@ function resolveEventChoice(choice) {
 
     let resultText = '';
     let effectStr = '';
+    let resultImage = '';
 
     if (choice.isGamble) {
         const roll = Math.random() * 100;
         if (roll < choice.success.chance) {
             resultText = choice.success.result;
             effectStr = choice.success.effect;
+            resultImage = choice.success.resultImage || '';
         } else {
             resultText = choice.fail.result;
             effectStr = choice.fail.effect;
+            resultImage = choice.fail.resultImage || '';
         }
     } else if (choice.isConditional) {
         const cond = evaluateCondition(choice.conditions);
         resultText = cond.result;
         effectStr = cond.effect;
+        resultImage = cond.resultImage || '';
     } else {
         resultText = choice.result || '完成。';
         effectStr = choice.effect || '';
+        resultImage = choice.resultImage || '';
+    }
+
+    // 切换背景到结算图
+    if (resultImage) {
+        const eventScreen = document.getElementById('event-screen');
+        eventScreen.style.backgroundImage = `url('${resultImage}')`;
     }
 
     const oldGpa = game.player.gpa;
@@ -894,6 +918,7 @@ function createEnemy(data) {
         hp: data.hp,
         maxHp: data.hp,
         defense: 0,
+        image: data.image || '',
         isElite: data.isElite || false,
         isBoss: data.isBoss || false,
         isSummon: data.isSummon || false,
@@ -1032,6 +1057,7 @@ function renderBattle() {
             actualDmgText = `<div class="actual-damage">实际扣血: <b>${realDmg}</b></div>`;
         }
         div.innerHTML = `
+            ${enemy.image ? `<img class="enemy-portrait" src="${enemy.image}" alt="${enemy.name}">` : ''}
             <div class="enemy-name">${enemy.name}</div>
             <div class="enemy-hp">${enemy.hp}/${enemy.maxHp}
                 <div class="enemy-hp-bar"><div class="enemy-hp-fill" style="width:${hpPercent}%"></div></div>
@@ -1987,10 +2013,11 @@ function showRelicView() {
         const div = document.createElement('div');
         div.className = `relic-item ${relic.type}`;
         const icon = relic.type === 'legendary' ? '⭐' : (relic.type === 'cursed' ? '💀' : '🔹');
+        const imgHtml = relic.image ? `<img class="relic-img" src="${relic.image}" alt="${relic.name}">` : '';
         div.innerHTML = `
+            ${imgHtml}
             <div class="relic-name">${icon} ${relic.name}</div>
             <div class="relic-effect">${relic.effect}</div>
-            <div class="relic-flavor">${relic.flavor || ''}</div>
         `;
         area.appendChild(div);
     });
@@ -2001,10 +2028,11 @@ function showRelicView() {
         const div = document.createElement('div');
         div.className = 'relic-item';
         div.style.borderColor = 'rgba(46, 204, 113, 0.4)';
+        const imgHtml = item.image ? `<img class="relic-img" src="${item.image}" alt="${item.name}">` : '';
         div.innerHTML = `
+            ${imgHtml}
             <div class="relic-name" style="color:#2ecc71">🧪 ${item.name}</div>
             <div class="relic-effect">${item.effect}</div>
-            <div class="relic-flavor">${item.flavor || ''}</div>
         `;
         area.appendChild(div);
     });

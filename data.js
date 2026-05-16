@@ -53,6 +53,7 @@ const enemies = {
     ddl: {
         name: "DDL",
         hp: 60,
+        image: "images/怪物_小DDL.png",
         isElite: false,
         isBoss: false,
         reward: {money: 50, cardChoice: 1},
@@ -67,6 +68,7 @@ const enemies = {
     teacher: {
         name: "点名的老师",
         hp: 50,
+        image: "images/怪物_点名老师.png",
         isElite: false,
         isBoss: false,
         reward: {money: 50, cardChoice: 1},
@@ -81,11 +83,12 @@ const enemies = {
     run24: {
         name: "2.4km体测",
         hp: 60,
+        image: "images/怪物_2400.png",
         isElite: true,
         isBoss: false,
         reward: {money: 80, cardChoice: 2, relic: 1},
         phase1: [
-            {turn:1, intent:"起跑的错觉", damage:0, effect:"playerEnergy+1NextTurn", desc:"不造成伤害。下回合精力+1。"},
+            {turn:1, intent:"起跑的错觉", damage:0, effect:"playerMaxEnergy-1NextTurn", desc:"不造成伤害。下回合精力-1。"},
             {turn:2, intent:"岔气与腹痛", damage:8, effect:"maxCards2ThisTurn", desc:"造成8伤害。本回合最多出2张牌。"},
             {turn:3, intent:"步伐沉重", damage:12, effect:"defenseHalfNextTurn", desc:"造成12伤害。下回合效率获取减半。"},
             {turn:4, intent:"口干舌燥", damage:10, effect:"discardRandomFunOrSocial", desc:"造成10伤害。随机弃1张娱乐/社交牌。"},
@@ -98,6 +101,7 @@ const enemies = {
     finalWeek: {
         name: "期！末！周！",
         hp: 130,
+        image: "images/怪物_期末周.png",
         isElite: false,
         isBoss: true,
         reward: {money: 100, gpa: 0.5},
@@ -112,6 +116,7 @@ const enemies = {
     miniDDL: {
         name: "夺命小DDL",
         hp: 18,
+        image: "images/怪物_小DDL.png",
         isSummon: true,
         pattern: [
             {turn:1, intent:"倒数3", damage:0, desc:"无动作。"},
@@ -125,46 +130,56 @@ const enemies = {
 const events = {
     library: {
         name: "深夜图书馆",
+        image: "images/深夜图书馆_选择界面.jpg",
         desc: "晚上十点半，闭馆音乐即将响起。四周只有翻书的沙沙声。在这个神圣的「卷王」殿堂里，看着周围奋笔疾书的同学，你感觉必须做出一些抉择。",
         choices: [
             {text:"再看一页，就看一页…", subtitle:"（沉浸式钻研）",
+                resultImage: "images/深夜图书馆_选牌.jpg",
                 result:"知识以一种极其痛苦的方式进入了你的大脑，你感觉自己变强了，但也快猝死了。",
                 effect:"hp-5,chooseStudyCard", effectDesc:"失去5心态，获得1张学业牌（三选一）。"},
             {text:"娱乐是可耻的。", subtitle:"（清理桌面）",
+                resultImage: "images/深夜图书馆_删牌.jpg",
                 result:"看着周围努力的人们，你感到一丝羞愧。你果断卸载了手机里的摸鱼软件，感觉灵魂得到了升华。",
                 effect:"removeFunCard", effectDesc:"永久移除牌组中的1张娱乐牌。"}
         ]
     },
     beidalou: {
         name: "百年北大楼",
+        image: "images/百年北大楼事件_选择界面.jpg",
         desc: "夕阳洒在爬满青藤的红砖老楼上。微风不燥，你仿佛听到了百年来无数学子在这里翻书的回音。这是母校的精神图腾。",
         choices: [
             {text:"买个文创雪糕，发个朋友圈！", subtitle:"（常春藤下合影）",
+                resultImage: "images/百年北大楼选择_文创雪糕.jpg",
                 result:"点赞数蹭蹭上涨！虽然花了一点小钱，但你收获了满满的情绪价值和新的人脉。",
                 effect:"money-10,hp+15,addSocialCard", effectDesc:"消耗10生活费。回复15心态，获得1张社交牌。"},
             {text:"老师，我好像有点迷茫……", subtitle:"（偶遇辅导员谈心）",
+                resultImage: "images/百年北大楼事件_辅导员.jpg",
                 result:"辅导员一针见血地指出了你的问题。虽然过程让人压力山大，但你成功解开了心结。",
                 effect:"hp-5,removeCurse,gpa+0.5", effectDesc:"失去5心态。永久移除1张废牌/诅咒牌，隐藏GPA+0.5。"},
             {text:"触摸红砖，感受先辈的智慧", subtitle:"（感悟百年传承）",
+                resultImage: "images/百年北大楼事件_触摸红砖.jpg",
                 result:"在这一刻，你如同被打通了任督二脉，某项复杂的知识深深印入了脑海，化作了本能。",
                 effect:"addInnateToStudyCard", effectDesc:"选择1张学业牌，赋予[固有]属性（开局必在手牌）。"}
         ]
     },
     canteen: {
         name: "干饭的抉择",
+        image: "images/干饭的抉择事件_选择界面.jpg",
         desc: "下课铃响，你思考着午饭吃什么。",
         choices: [
             {text:"相信师傅！支持改进！", subtitle:"（10生活费）", cost:10, isGamble:true,
-                success:{chance:50, result:"师傅今天超常发挥！这份黄焖鸡不仅肉多，还治愈了你的灵魂。", effect:"hp+25,gpa+0.2"},
-                fail:{chance:50, result:"这如出一辙的绝望味道……你看着盘子里难以名状的糊状物，瞬间失去了活下去的动力。", effect:"hp-15,addSick"}
+                success:{chance:50, resultImage:"images/干饭的抉择事件_食堂_好.jpg", result:"师傅今天超常发挥！这份黄焖鸡不仅肉多，还治愈了你的灵魂。", effect:"hp+25,gpa+0.2"},
+                fail:{chance:50, resultImage:"images/干饭的抉择选择_食堂_坏.jpg", result:"这如出一辙的绝望味道……你看着盘子里难以名状的糊状物，瞬间失去了活下去的动力。", effect:"hp-15,addSick"}
             },
             {text:"前往广州路「第二食堂」", subtitle:"（50生活费）", cost:50,
+                resultImage: "images/干饭的抉择_麦当劳.jpg",
                 result:"听着若有若无的「Ba-da-ba-ba-ba」提示音，你感受到了工业流水线带来的极致稳定。M门的庇护让你瞬间回血！",
                 effect:"fullHeal,randomRelic", effectDesc:"心态回满，获得1件随机生活用品。"}
         ]
     },
     supermarket: {
         name: "校园超市",
+        image: "images/校园超市_选择界面.jpg",
         desc: "你走进了灯火通明的校园超商。货架上堆满物美价廉的东西。",
         choices: [
             {text:"小买一点", subtitle:"（30生活费）", cost:30,
@@ -184,16 +199,18 @@ const events = {
 const randomEvents = {
     lecture: {
         name: "学术讲座",
+        image: "images/学术讲座_选择界面.jpg",
         desc: "辅导员在群里发了强制通知：「今晚大礼堂有讲座，所有人必须打卡签到！」你拖着疲惫的身躯走进了大厅。",
         choices: [
             {text:"硬着头皮听讲", subtitle:"（系统自动判定）", isGamble:true,
-                success:{chance:50, result:"竟然是干货满满的讲座！大牛的分享让你茅塞顿开。", effect:"gpa+1.0,maxHp+10"},
-                fail:{chance:50, result:"台上照本宣科，台下灵魂枯萎。你如同坐牢一般熬过了这两个小时，满脑子都是浆糊。", effect:"hp-10,addSleepy"}
+                success:{chance:50, resultImage:"images/学术讲座_好.jpg", result:"竟然是干货满满的讲座！大牛的分享让你茅塞顿开。", effect:"gpa+1.0,maxHp+10"},
+                fail:{chance:50, resultImage:"images/学术讲座_失.jpg", result:"台上照本宣科，台下灵魂枯萎。你如同坐牢一般熬过了这两个小时，满脑子都是浆糊。", effect:"hp-10,addSleepy"}
             }
         ]
     },
     nobel: {
         name: "诺奖得主开讲啦",
+        image: "images/诺奖事件_选择界面.jpg",
         desc: "轰动全校！诺奖得主竟然来开讲座了！报告厅外挤满了人，过道里连落脚的地方都没有。",
         choices: [
             {text:"挤进前排聆听", subtitle:"（系统检测当前心态值）", isConditional:true,
@@ -206,32 +223,36 @@ const randomEvents = {
     },
     allergy: {
         name: "会呼吸的痛",
+        image: "images/会呼吸的痛事件_选择界面.jpg",
         desc: "谷雨刚过，校园里漫天飞舞着柳絮和梧桐毛。空气中全是这种白色的小炸弹，你感觉鼻子发痒，呼吸开始变得困难。",
         choices: [
             {text:"在书包里翻找口罩", subtitle:"（系统检测卡组厚度）", isConditional:true,
                 conditions:[
-                    {check:"deckSize <= 10", result:"幸好轻装上阵！你迅速从整洁的包里摸出了备用口罩，逃过一劫。", effect:"hp-3"},
-                    {check:"deckSize > 10", result:"东西实在太多了！等你在那堆乱七八糟的课本和杂物里翻出口罩时，过敏性鼻炎已经彻底爆发了！", effect:"hp-10,addRhinitis"}
+                    {check:"deckSize <= 10", resultImage:"images/会呼吸的痛_成功.png", result:"幸好轻装上阵！你迅速从整洁的包里摸出了备用口罩，逃过一劫。", effect:"hp-3"},
+                    {check:"deckSize > 10", resultImage:"images/会呼吸的痛_失败.jpg", result:"东西实在太多了！等你在那堆乱七八糟的课本和杂物里翻出口罩时，过敏性鼻炎已经彻底爆发了！", effect:"hp-10,addRhinitis"}
                 ]
             }
         ]
     },
     crabEvent: {
         name: "好事之人",
+        image: "images/好事之人事件_选择界面.jpg",
         desc: "手机狂震，母校因一张「999元帝王蟹」的照片被全网围攻。营销号和键盘侠高举「正义」大旗，评论区里各种断章取义。作为深爱母校的校友，你感到极其愤怒。",
         choices: [
             {text:"陷入舆论的漩涡", subtitle:"",
+                resultImage: "images/好事之人事件_结算画面.png",
                 result:"无论你怎么辩解，声音都瞬间被流量淹没，让你心力交瘁。",
                 effect:"addCrabRelic", effectDesc:"获得负面生活用品「帝王蟹」（每3回合精力-1）。"}
         ]
     },
     mysteryMan: {
         name: "鼓楼校口的神秘人",
+        image: "images/神秘的人演讲哥事件_选择界面.jpg",
         desc: "在汉口路校门口，那个人又出现了！他正对着空气高谈阔论着一些常人难以理解的言论。",
         choices: [
             {text:"试图理解他的逻辑", subtitle:"", isGamble:true,
-                success:{chance:50, result:"你悟了！你从乱码般的话语中捕捉到了降维打击的思维方式！", effect:"addPhilosophyRelic"},
-                fail:{chance:50, result:"CPU烧了…试图解析毫无逻辑的词汇让你的精神几近崩溃。", effect:"hp-15"}
+                success:{chance:50, resultImage:"images/神秘人事件_选项.jpg", result:"你悟了！你从乱码般的话语中捕捉到了降维打击的思维方式！", effect:"addPhilosophyRelic"},
+                fail:{chance:50, resultImage:"images/神秘人事件_选项1.jpg", result:"CPU烧了…试图解析毫无逻辑的词汇让你精神几近崩溃。", effect:"hp-15"}
             },
             {text:"买瓶饮料递给他", subtitle:"（10生活费）", cost:10,
                 result:"无论真理如何，你选择保留一丝人文关怀。这让你觉得自己依然是个有温度的人。",
@@ -244,12 +265,15 @@ const randomEvents = {
     niuniu: {
         name: "神秘的牛牛",
         isHidden: true,
+        image: "images/牛牛事件_选择界面.jpg",
         desc: "你在学校里碰到了一位神秘的人。他递给你一根干瘪的菜根，缓缓问道：「同学，觉得读书苦吗？」",
         choices: [
             {text:"苦，但能熬。", subtitle:"",
+                resultImage: "images/牛牛事件_菜根.jpg",
                 result:"他欣慰地点点头：「嚼得菜根，做得大事。去吧，孩子。」",
                 effect:"addCaigenRelic", effectDesc:"获得传奇生活用品【嚼过的菜根】（半血以下化身战神）。"},
             {text:"太特么苦了，我想回家。", subtitle:"",
+                resultImage: "images/牛牛事件_生活费.jpg",
                 result:"他叹了口气，往你手里塞了一把零钱：「去买点好吃的吧，别难为自己。」",
                 effect:"money+50,gpa-0.5", effectDesc:"获得50生活费，但隐藏GPA-0.5。"}
         ]
@@ -262,23 +286,23 @@ const randomEventPool = ["lecture", "nobel", "allergy", "crabEvent", "mysteryMan
 // 遗物数据
 const relics = {
     // 传奇
-    nobel: {name:"诺奖得主的签名", type:"legendary", effect:"每打出2张牌，下张学业牌消耗-1。", flavor:"大脑被开光了。"},
-    caigen: {name:"嚼过的菜根", type:"legendary", effect:"心态<50%时，精力+1，学业牌伤害+3。", flavor:"嚼得菜根，做得大事。"},
-    philosophy: {name:"哲学碎片", type:"legendary", effect:"一回合打出3张牌，随机1张牌消耗变0。", flavor:"降维打击。"},
+    nobel: {name:"诺奖得主的签名", type:"legendary", image:"images/遗物_诺奖得主的签名.png", effect:"每打出2张牌，下张学业牌消耗-1。", flavor:"大脑被开光了。"},
+    caigen: {name:"嚼过的菜根", type:"legendary", image:"", effect:"心态<50%时，精力+1，学业牌伤害+3。", flavor:"嚼得菜根，做得大事。"},
+    philosophy: {name:"哲学碎片", type:"legendary", image:"images/遗物_哲学碎片.png", effect:"一回合打出3张牌，随机1张牌消耗变0。", flavor:"降维打击。"},
     // 普通
-    thermos: {name:"保温杯", type:"common", effect:"战斗开始获得6点效率。", flavor:"里面装的不是水，是我的生命。"},
-    highlighter: {name:"四色荧光笔", type:"common", effect:"每场首张学业牌伤害+50%。", flavor:"划重点是有用的。"},
-    headphones: {name:"降噪耳机", type:"common", effect:"战斗第一回合多抽1张牌。", flavor:"世界的喧嚣与我无关。"},
-    redbull: {name:"瑞星？", type:"common", effect:"精力上限+1，心态上限-10。", flavor:"烧血？"},
+    thermos: {name:"保温杯", type:"common", image:"images/遗物_保温杯.png", effect:"战斗开始获得6点效率。", flavor:"里面装的不是水，是我的生命。"},
+    highlighter: {name:"四色荧光笔", type:"common", image:"images/遗物_四色笔.png", effect:"每场首张学业牌伤害+50%。", flavor:"划重点是有用的。"},
+    headphones: {name:"降噪耳机", type:"common", image:"images/遗物_降噪耳机.png", effect:"战斗第一回合多抽1张牌。", flavor:"世界的喧嚣与我无关。"},
+    redbull: {name:"瑞星？", type:"common", image:"images/遗物_瑞幸.png", effect:"精力上限+1，心态上限-10。", flavor:"烧血？"},
     // 负面
-    crab: {name:"帝王蟹", type:"cursed", effect:"每场战斗第3、6、9...回合开始时，本回合精力-1。", flavor:"舆论的漩涡阴魂不散。"}
+    crab: {name:"帝王蟹", type:"cursed", image:"", effect:"每场战斗第3、6、9...回合开始时，本回合精力-1。", flavor:"舆论的漩涡阴魂不散。"}
 };
 
 // 消耗道具
 const items = {
-    coffee: {name:"高浓度速溶咖啡", effect:"立即+1精力。", flavor:"我还能蒸！"},
-    paper: {name:"学霸的草稿纸", effect:"下张学业牌伤害翻倍。", flavor:"通往及格线的地图。"},
-    cola: {name:"考试周快乐水", effect:"立即+15心态。", flavor:"二氧化碳的快乐是永恒的。"}
+    coffee: {name:"高浓度速溶咖啡", image:"images/道具_浓缩咖啡.png", effect:"立即+1精力。", flavor:"我还能蒸！"},
+    paper: {name:"学霸的草稿纸", image:"images/道具_学霸的草稿纸.png", effect:"下张学业牌伤害翻倍。", flavor:"通往及格线的地图。"},
+    cola: {name:"考试周快乐水", image:"images/道具_期末周快乐水.png", effect:"立即+15心态。", flavor:"二氧化碳的快乐是永恒的。"}
 };
 
 // 12周流程

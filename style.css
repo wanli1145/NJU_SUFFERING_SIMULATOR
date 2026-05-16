@@ -10,6 +10,11 @@ body {
     color: #f5f5f5;
     min-height: 100vh;
     overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: default;
 }
 
 #game-container {
@@ -30,6 +35,10 @@ body {
 
 .screen.active {
     display: flex;
+}
+
+#battle-screen.active {
+    flex-direction: column;
 }
 
 .hidden {
@@ -72,7 +81,7 @@ body {
 
 /* ===== 开始界面 ===== */
 #start-screen {
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    background: url('images/初始界面.jpg') center/cover no-repeat;
     justify-content: center;
     align-items: center;
     overflow: hidden;
@@ -81,10 +90,7 @@ body {
 .start-bg-decoration {
     position: absolute;
     inset: 0;
-    background:
-        radial-gradient(circle at 20% 30%, rgba(245, 87, 108, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(102, 126, 234, 0.08) 0%, transparent 40%),
-        repeating-linear-gradient(45deg, transparent, transparent 80px, rgba(255,255,255,0.01) 80px, rgba(255,255,255,0.01) 81px);
+    background: rgba(0, 0, 0, 0);
     pointer-events: none;
 }
 
@@ -283,10 +289,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 24px;
-    background: rgba(15, 12, 41, 0.6);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    padding: 10px 20px;
+    background: rgba(15, 12, 41, 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
@@ -361,21 +367,30 @@ body {
 .campus-card {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 8px 16px;
-    gap: 16px;
-    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02), 0 4px 15px rgba(0,0,0,0.3);
+    gap: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.campus-card::before {
+    display: none;
+}
+
+.campus-card > * {
+    position: relative;
+    z-index: 1;
 }
 
 .campus-card .card-avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: url('images/潦草小人_男.png') center/cover no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -406,7 +421,22 @@ body {
 
 /* ===== 地图界面 ===== */
 #map-screen {
-    background: linear-gradient(180deg, #11111a 0%, #1c1c38 100%);
+    background: url('images/会呼吸的痛事件_选择界面.jpg') center/cover no-repeat;
+    position: relative;
+}
+
+#map-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 15, 30, 0.3);
+    pointer-events: none;
+    z-index: 0;
+}
+
+#map-screen > * {
+    position: relative;
+    z-index: 1;
 }
 
 .map-content {
@@ -556,7 +586,22 @@ body {
 
 /* ===== 事件界面 ===== */
 #event-screen {
-    background: linear-gradient(180deg, #0f0c29 0%, #201a40 100%);
+    background: url('images/深夜图书馆_选牌.jpg') center/cover no-repeat;
+    position: relative;
+}
+
+#event-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 12, 41, 0.25);
+    pointer-events: none;
+    z-index: 0;
+}
+
+#event-screen > * {
+    position: relative;
+    z-index: 1;
 }
 
 .event-content {
@@ -639,198 +684,314 @@ body {
 
 /* ===== 战斗界面 ===== */
 #battle-screen {
-    background: linear-gradient(180deg, #05050f 0%, #101026 50%, #1b1b3a 100%);
+    background: url('images/好事之人事件_选择界面.jpg') center/cover no-repeat;
+    position: relative;
+    overflow: hidden;
 }
 
+#battle-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(30, 20, 10, 0.15);
+    pointer-events: none;
+    z-index: 0;
+}
+
+#battle-screen > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- 玩家状态栏：手绘卷轴风格，左上角紧凑横条 --- */
 .player-battle-panel {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 10;
     display: flex;
     align-items: center;
-    gap: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
-    padding: 14px 24px;
-    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02), 0 4px 20px rgba(0,0,0,0.4);
+    padding: 10px 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    min-width: 260px;
+    max-width: 360px;
+}
+
+.player-battle-panel::before {
+    display: none;
+}
+
+.player-battle-panel > * {
+    position: relative;
+    z-index: 1;
 }
 
 .player-avatar-battle {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: url('images/潦草小人_男.png') center/cover no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
-    border: 2px solid rgba(255,255,255,0.3);
+    font-size: 0;
+    border: 2px solid #d4a056;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(80, 50, 20, 0.5);
 }
 
 .player-battle-info {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    min-width: 280px;
+    gap: 5px;
+    min-width: 160px;
 }
 
 .player-hp-section {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
 }
 
 .hp-label {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: bold;
+    color: #f5e6d0;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 .player-hp-bar {
     width: 100%;
-    height: 18px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 9px;
+    height: 14px;
+    background: rgba(80, 50, 20, 0.5);
+    border-radius: 7px;
     overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.15);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    border: 1.5px solid #a0764a;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
 }
 
 .player-hp-fill {
     height: 100%;
-    background: linear-gradient(90deg, #e74c3c, #ff6b6b);
-    border-radius: 9px;
+    background: linear-gradient(90deg, #c0392b, #e74c3c, #ff6b6b);
+    border-radius: 7px;
     transition: width 0.4s ease;
+    box-shadow: 0 0 6px rgba(231, 76, 60, 0.4);
 }
 
 .player-battle-row {
     display: flex;
-    gap: 18px;
+    gap: 12px;
 }
 
 .battle-stat {
-    font-size: 16px;
-    color: #ddd;
-    font-weight: 500;
+    font-size: 13px;
+    color: #f0d9b5;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
 
+/* --- 战场区域：敌人占据60%高度，大头像居中 --- */
 .battle-field {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 20px 20px 10px;
+    min-height: 0;
+}
+
+.battle-top-bar {
+    display: none; /* 隐藏旧顶栏，玩家面板改为绝对定位 */
 }
 
 .enemies-area {
     display: flex;
-    gap: 24px;
-    margin-bottom: 20px;
+    gap: 32px;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    width: 100%;
 }
 
 .enemy-card {
-    background: rgba(255, 50, 50, 0.1);
-    border: 2px solid rgba(255, 50, 50, 0.3);
-    border-radius: 14px;
-    padding: 24px 28px;
-    min-width: 220px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    min-width: 200px;
     text-align: center;
     transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.enemy-portrait {
+    width: auto;
+    height: 50vh;
+    max-height: 420px;
+    object-fit: contain;
+    margin: 0 auto;
+    display: block;
+    filter: drop-shadow(0 10px 30px rgba(0,0,0,0.6));
+    transition: transform 0.3s;
+}
+
+.enemy-card:hover .enemy-portrait {
+    transform: scale(1.03);
+}
+
+.enemy-card.elite .enemy-portrait {
+    height: 55vh;
+    max-height: 460px;
+}
+
+.enemy-card.boss .enemy-portrait {
+    height: 60vh;
+    max-height: 500px;
 }
 
 .enemy-card.elite {
-    border-color: rgba(255, 165, 0, 0.5);
-    background: rgba(255, 165, 0, 0.1);
+    /* no background/border for illustrated style */
 }
 
 .enemy-card.boss {
-    border-color: rgba(200, 0, 255, 0.5);
-    background: rgba(200, 0, 255, 0.1);
-    min-width: 280px;
+    /* no background/border for illustrated style */
 }
 
 .enemy-name {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
-    margin-bottom: 12px;
-    color: #ff6b6b;
+    margin-top: 8px;
+    margin-bottom: 6px;
+    color: #4a2c17;
+    text-shadow: 0 1px 3px rgba(255, 220, 150, 0.6);
+    background: rgba(255, 240, 210, 0.7);
+    padding: 2px 14px;
+    border-radius: 10px;
+    border: 1px solid #c8a060;
 }
 
 .enemy-card.elite .enemy-name {
-    color: #ffa500;
+    color: #8b4513;
+    border-color: #d4a020;
+    background: rgba(255, 230, 160, 0.75);
 }
 
 .enemy-card.boss .enemy-name {
-    color: #c850ff;
-    font-size: 24px;
+    color: #5c1a8a;
+    font-size: 22px;
+    border-color: #9b59b6;
+    background: rgba(240, 210, 255, 0.7);
 }
 
+/* --- 敌人HP条：在头像下方，手绘风格 --- */
 .enemy-hp {
-    margin-bottom: 10px;
-    font-size: 16px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    font-size: 13px;
     font-weight: bold;
+    color: #5c3a1e;
+    text-shadow: 0 1px 1px rgba(255, 220, 150, 0.5);
 }
 
 .enemy-hp-bar {
-    width: 100%;
-    height: 14px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 7px;
+    width: 200px;
+    height: 12px;
+    background: rgba(80, 50, 20, 0.4);
+    border-radius: 6px;
     overflow: hidden;
-    margin-top: 6px;
-    border: 1px solid rgba(255,255,255,0.1);
+    margin: 2px auto 0;
+    border: 1.5px solid #a0764a;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .enemy-hp-fill {
     height: 100%;
-    background: linear-gradient(90deg, #ff4757, #ff6b81);
+    background: linear-gradient(90deg, #c0392b, #e74c3c, #ff7675);
+    border-radius: 6px;
     transition: width 0.3s;
+    box-shadow: 0 0 4px rgba(231, 76, 60, 0.3);
 }
 
+/* --- 敌人意图：小气泡风格，靠近敌人 --- */
 .enemy-intent {
-    font-size: 15px;
-    color: #ffa502;
-    margin-top: 12px;
-    padding: 10px 12px;
-    background: rgba(255, 165, 2, 0.1);
-    border: 1px solid rgba(255, 165, 2, 0.25);
-    border-radius: 8px;
-    line-height: 1.5;
+    font-size: 12px;
+    color: #6b3a10;
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: rgba(255, 240, 200, 0.85);
+    border: 1.5px solid #d4a050;
+    border-radius: 12px;
+    line-height: 1.4;
     font-weight: 500;
+    box-shadow: 0 2px 8px rgba(80, 50, 20, 0.25);
+    max-width: 180px;
+    position: relative;
+}
+
+.enemy-intent::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid #d4a050;
 }
 
 .enemy-defense {
-    font-size: 15px;
-    color: #70a1ff;
-    margin-top: 6px;
+    font-size: 13px;
+    color: #2e6da4;
+    margin-top: 4px;
     font-weight: bold;
+    background: rgba(200, 230, 255, 0.6);
+    padding: 2px 10px;
+    border-radius: 8px;
+    border: 1px solid #7fb3d4;
 }
 
 .enemy-card .skill-name-below {
-    font-size: 13px;
-    color: #ffa502;
-    margin-top: 6px;
-    padding: 4px 10px;
-    background: rgba(255, 165, 2, 0.12);
-    border-radius: 5px;
+    font-size: 11px;
+    color: #7a4a1a;
+    margin-top: 4px;
+    padding: 3px 8px;
+    background: rgba(255, 230, 180, 0.7);
+    border-radius: 6px;
     display: inline-block;
     font-weight: 500;
+    border: 1px solid #c8a060;
 }
 
 .battle-status {
-    font-size: 14px;
-    color: #888;
-    margin-top: 10px;
-    min-height: 20px;
+    font-size: 13px;
+    color: #8b6b4a;
+    margin-top: 8px;
+    min-height: 18px;
+    text-shadow: 0 1px 1px rgba(255, 240, 200, 0.4);
 }
 
-/* ===== 手牌区 ===== */
+/* ===== 手牌区：底部25%高度，温暖羊皮纸风格 ===== */
 .battle-bottom {
-    padding: 0 10px 16px;
-    background: rgba(0, 0, 0, 0.5);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0 10px 12px;
+    background: linear-gradient(to top, rgba(80, 50, 20, 0.7) 0%, rgba(80, 50, 20, 0.3) 70%, transparent 100%);
+    border-top: 2px solid rgba(180, 130, 60, 0.4);
+    height: 25%;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
 }
 
 .hand-row {
@@ -838,7 +999,8 @@ body {
     align-items: flex-end;
     justify-content: center;
     gap: 0;
-    padding: 10px 0 0;
+    padding: 8px 0 0;
+    height: 100%;
 }
 
 .pile-visual {
@@ -910,9 +1072,9 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    min-height: 180px;
+    min-height: 150px;
     position: relative;
-    padding: 10px 10px 0;
+    padding: 8px 10px 0;
     flex: 1;
 }
 
@@ -1109,28 +1271,34 @@ body {
 
 .card.type-study {
     border-color: rgba(78, 205, 196, 0.5);
-    background: linear-gradient(145deg, rgba(26, 58, 56, 0.85) 0%, rgba(26, 26, 46, 0.9) 100%);
+    background: url('images/卡牌底片_学业.png') center/cover no-repeat;
 }
 .card.type-study:hover { border-color: rgba(78, 205, 196, 0.8); box-shadow: 0 15px 40px rgba(78, 205, 196, 0.2), inset 0 0 20px rgba(78, 205, 196, 0.1); }
 .card.type-study::after { background: linear-gradient(90deg, #4ecdc4, #2ecc71); }
+.card.type-study .card-name { color: #1a1a2e; }
+.card.type-study .card-desc { color: #3a3a3a; }
 
 .card.type-fun {
     border-color: rgba(255, 107, 107, 0.5);
-    background: linear-gradient(145deg, rgba(58, 26, 26, 0.85) 0%, rgba(26, 26, 46, 0.9) 100%);
+    background: url('images/卡牌底片_娱乐.png') center/cover no-repeat;
 }
 .card.type-fun:hover { border-color: rgba(255, 107, 107, 0.8); box-shadow: 0 15px 40px rgba(255, 107, 107, 0.2), inset 0 0 20px rgba(255, 107, 107, 0.1); }
 .card.type-fun::after { background: linear-gradient(90deg, #ff6b6b, #ee5a24); }
+.card.type-fun .card-name { color: #1a1a2e; }
+.card.type-fun .card-desc { color: #3a3a3a; }
 
 .card.type-social {
     border-color: rgba(255, 217, 61, 0.5);
-    background: linear-gradient(145deg, rgba(58, 58, 26, 0.85) 0%, rgba(26, 26, 46, 0.9) 100%);
+    background: url('images/卡牌底片_社交.png') center/cover no-repeat;
 }
 .card.type-social:hover { border-color: rgba(255, 217, 61, 0.8); box-shadow: 0 15px 40px rgba(255, 217, 61, 0.2), inset 0 0 20px rgba(255, 217, 61, 0.1); }
 .card.type-social::after { background: linear-gradient(90deg, #ffd93d, #f5a623); }
+.card.type-social .card-name { color: #1a1a2e; }
+.card.type-social .card-desc { color: #3a3a3a; }
 
 .card.type-curse {
     border-color: rgba(142, 68, 173, 0.5);
-    background: linear-gradient(145deg, rgba(45, 26, 46, 0.85) 0%, rgba(10, 10, 30, 0.9) 100%);
+    background: url('images/卡牌底片_诅咒.png') center/cover no-repeat;
 }
 .card.type-curse:hover { border-color: rgba(142, 68, 173, 0.8); box-shadow: 0 15px 40px rgba(142, 68, 173, 0.2), inset 0 0 20px rgba(142, 68, 173, 0.1); }
 .card.type-curse::after { background: linear-gradient(90deg, #8e44ad, #6c3483); }
@@ -1191,20 +1359,24 @@ body {
 
 .btn-end-turn {
     display: block;
-    margin: 12px auto 0;
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    font-size: 16px;
-    border-radius: 6px;
+    margin: 8px auto 0;
+    background: linear-gradient(135deg, #8b4513, #a0522d);
+    color: #fff5e6;
+    border: 2px solid #d4a050;
+    padding: 8px 24px;
+    font-size: 14px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    box-shadow: 0 3px 10px rgba(80, 50, 20, 0.4);
 }
 
 .btn-end-turn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+    box-shadow: 0 5px 18px rgba(139, 69, 19, 0.5);
+    background: linear-gradient(135deg, #a0522d, #cd853f);
 }
 
 /* ===== 卡牌选择界面 ===== */
@@ -1371,23 +1543,36 @@ body {
 }
 
 #ending-screen.rank-S {
-    background: linear-gradient(135deg, #1a1a2e, #2d1b69, #1a1a2e);
+    background: url('images/通关结算.jpg') center/cover no-repeat;
 }
 
 #ending-screen.rank-A {
-    background: linear-gradient(135deg, #1a1a2e, #1b4332, #1a1a2e);
+    background: url('images/结局_A.png') center/cover no-repeat;
 }
 
 #ending-screen.rank-B {
-    background: linear-gradient(135deg, #1a1a2e, #16213e, #1a1a2e);
+    background: url('images/结局_B.png') center/cover no-repeat;
 }
 
 #ending-screen.rank-C {
-    background: linear-gradient(135deg, #1a1a2e, #3d3d3d, #1a1a2e);
+    background: url('images/结局_c.png') center/cover no-repeat;
 }
 
 #ending-screen.rank-F {
-    background: linear-gradient(135deg, #1a0a0a, #2d1a1a, #1a0a0a);
+    background: url('images/未通关结算.jpg') center/cover no-repeat;
+}
+
+#ending-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+#ending-screen > * {
+    position: relative;
+    z-index: 1;
 }
 
 .ending-content {
@@ -1702,7 +1887,7 @@ body {
 }
 
 .demo-watermark::after {
-    content: 'v1.6 测试版';
+    content: 'v1.7 测试版';
     font-size: 9px;
     color: rgba(245, 87, 108, 0.5);
     letter-spacing: 1px;
@@ -1799,19 +1984,19 @@ body {
 
 /* 实际伤害预览 */
 .actual-damage {
-    margin-top: 8px;
-    font-size: 14px;
-    color: #ff4757;
-    background: rgba(255, 71, 87, 0.1);
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px dashed rgba(255, 71, 87, 0.4);
-    font-weight: 500;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #8b1a1a;
+    background: rgba(255, 220, 200, 0.8);
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid #d4806a;
+    font-weight: bold;
 }
 
 .actual-damage b {
-    font-size: 18px;
-    color: #ff6b81;
+    font-size: 16px;
+    color: #c0392b;
 }
 
 /* 牌堆可点击提示 */
@@ -2381,4 +2566,41 @@ body {
 #gpa-chart-battle {
     display: block;
     border-radius: 4px;
+}
+
+
+/* 允许输入框选中文字 */
+input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    cursor: text;
+}
+
+button {
+    cursor: pointer;
+}
+
+
+/* 遗物/道具图片 */
+.relic-img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 8px;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+}
+
+.relic-bar-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    vertical-align: middle;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+}
+
+.owned-relic-icon {
+    padding: 4px;
 }
