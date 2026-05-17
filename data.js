@@ -3,7 +3,7 @@
 const allCards = [
     // ===== 初始牌 =====
     {id:"init_study", name:"学习", cost:1, type:"study", damage:6, defense:0, gpa:1, image:"images/卡牌-学业/学习.png", desc:"造成6点伤害。"},
-    {id:"init_phone", name:"小手机真好玩", cost:1, type:"fun", damage:0, defense:5, gpa:0, image:"images/卡牌-娱乐/摸小蓝鲸.png", desc:"获得5点效率。"},
+    {id:"init_phone", name:"小手机真好玩", cost:1, type:"fun", damage:0, defense:5, gpa:0, desc:"获得5点效率。"},
     // ===== 学业牌 =====
     {id:"s1", name:"量子速读", cost:1, type:"study", damage:5, defense:0, gpa:3, image:"images/卡牌-学业/量子速读.png", effect:"draw1", desc:"造成5点伤害。抽1张牌。"},
     {id:"s2", name:"考试周", cost:3, type:"study", damage:24, defense:0, gpa:5, image:"images/卡牌-学业/考试周.png", effect:"nextTurnEnergy-1", desc:"造成24点伤害。下回合精力-1。"},

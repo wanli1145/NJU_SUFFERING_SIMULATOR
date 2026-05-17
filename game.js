@@ -1262,6 +1262,26 @@ function attachDragHandler(cardEl, handIdx) {
         // 检测松手位置下的敌人作为目标
         const targetIdx = findEnemyAtPoint(e.clientX, e.clientY);
 
+        // 如果没有拖动过（只是点击）或者拖回了手牌区域 → 取消，弹回原位
+        const handArea = document.getElementById('hand-area');
+        const handRect = handArea.getBoundingClientRect();
+        const inHandArea = e.clientY >= handRect.top - 20;
+
+        if (!hasMoved || inHandArea) {
+            // 弹回原位
+            cardEl.classList.remove('is-dragging');
+            cardEl.style.transition = 'all 0.25s ease-out';
+            cardEl.style.removeProperty('transform');
+            cardEl.style.boxShadow = '';
+            cardEl.style.opacity = '';
+            setTimeout(() => {
+                cardEl.style.zIndex = '';
+                cardEl.style.transition = '';
+            }, 250);
+            return;
+        }
+
+        // 拖到了手牌区域外 → 出牌
         cardEl.classList.remove('is-dragging');
         cardEl.style.transition = 'none';
         playCard(handIdx, targetIdx);
