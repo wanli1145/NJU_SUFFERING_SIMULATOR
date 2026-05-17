@@ -1853,7 +1853,7 @@ body {
 }
 
 .demo-watermark::after {
-    content: 'v2.0 测试版';
+    content: 'v2.0 轻量版';
     font-size: 9px;
     color: rgba(245, 87, 108, 0.5);
     letter-spacing: 1px;
