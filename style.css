@@ -421,7 +421,7 @@ body {
 
 /* ===== 地图界面 ===== */
 #map-screen {
-    background: url('images/会呼吸的痛事件_选择界面.jpg') center/cover no-repeat;
+    background: url('images/地图界面.png') center/cover no-repeat;
     position: relative;
 }
 
@@ -692,7 +692,7 @@ body {
 
 /* ===== 战斗界面 ===== */
 #battle-screen {
-    background: url('images/好事之人事件_选择界面.jpg') center/cover no-repeat;
+    background: url('images/战斗界面.png') center/cover no-repeat;
     position: relative;
     overflow: hidden;
 }
@@ -1596,24 +1596,26 @@ body {
 }
 
 .modal-content {
-    background: rgba(20, 20, 35, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02);
-    border-radius: 16px;
-    padding: 30px 40px;
+    background: #faf8f5;
+    background-image: url('images/边框.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    border-radius: 8px;
+    padding: 45px 55px;
     text-align: center;
-    max-width: 400px;
+    max-width: 450px;
+    color: #2a1a3a;
 }
 
 .modal-content h2 {
-    color: #ff6b6b;
+    color: #4a2060;
     margin-bottom: 12px;
 }
 
 .modal-content p {
-    color: #ccc;
+    color: #3a3a3a;
     margin-bottom: 20px;
     line-height: 1.6;
 }
